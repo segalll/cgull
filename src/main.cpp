@@ -4,6 +4,7 @@
 #define GL_SILENCE_DEPRECATION
 #endif
 
+#include <glad/gl.h>
 #include <GLFW/glfw3.h>
 
 int main() {
