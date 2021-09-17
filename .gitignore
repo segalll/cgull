@@ -14,3 +14,6 @@ _deps
 # Libraries and binaries
 lib
 bin
+
+# cache (currently just for clangd)
+.cache
