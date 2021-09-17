@@ -9,6 +9,8 @@
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 
+#include <iostream>
+
 int main() {
     if (!glfwInit())
         return -1;
@@ -26,11 +28,16 @@ int main() {
 
     GLFWwindow* window = glfwCreateWindow(width, height, "CGull", nullptr, nullptr);
     if (!window) {
+        std::cout << "Failed to create window\n";
         glfwTerminate();
         return -1;
     }
 
     glfwMakeContextCurrent(window);
+
+    if (!gladLoadGL((GLADloadfunc) glfwGetProcAddress)) {
+        std::cout << "Failed to initialize OpenGL context\n";
+    }
 
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
