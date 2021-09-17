@@ -12,8 +12,10 @@
 #include <iostream>
 
 int main() {
-    if (!glfwInit())
+    if (!glfwInit()) {
+        std::cout << "Failed to initialize GLFW\n";
         return -1;
+    }
 
 #ifdef __APPLE__
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
