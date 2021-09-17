@@ -35,8 +35,9 @@ int main() {
 
     glfwMakeContextCurrent(window);
 
-    if (!gladLoadGL((GLADloadfunc) glfwGetProcAddress)) {
+    if (gladLoadGL(glfwGetProcAddress) == 0) {
         std::cout << "Failed to initialize OpenGL context\n";
+        return -1;
     }
 
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
