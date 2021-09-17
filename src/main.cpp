@@ -24,10 +24,10 @@ int main() {
 #endif
 
     GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
-    int width, height;
-    glfwGetMonitorPhysicalSize(primaryMonitor, &width, &height);
 
-    GLFWwindow* window = glfwCreateWindow(width, height, "CGull", nullptr, nullptr);
+    auto videoMode = glfwGetVideoMode(primaryMonitor);
+
+    GLFWwindow* window = glfwCreateWindow(videoMode->width, videoMode->height, "CGull", nullptr, nullptr);
     if (!window) {
         std::cout << "Failed to create window\n";
         glfwTerminate();
