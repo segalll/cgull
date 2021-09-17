@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.12)
 
 set(CMAKE_C_COMPILER clang)
 set(CMAKE_CXX_COMPILER clang++)
@@ -13,6 +13,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 add_subdirectory(deps)
 
 add_executable(cgull src/main.cpp src/editor.cpp)
+
+set_property(TARGET cgull PROPERTY CXX_STANDARD 20)
 
 find_package(Freetype REQUIRED)
 find_package(glfw3 3.3 REQUIRED)
