@@ -3,9 +3,10 @@
 #include <GLFW/glfw3.h>
 
 #include <vector>
+#include <string>
 
 namespace {
-    typedef uint8_t Char;
+    typedef uint32_t Char;
 
     struct Glyph {
         Char mChar;
@@ -64,11 +65,11 @@ public:
     void handleTextInput(unsigned int codepoint);
     void handleSpecialKeyInput(int key, int mods);
     void handleMouseButton(int button, int mods, unsigned int xpos, unsigned int ypos);
-    void enterCharacter(Char character);
 private:
     Lines mLines;
     Coordinates mCoords;
     EditorState mState;
 
     Coordinates screenPosToCoordinates(unsigned int xpos, unsigned int ypos) const;
+    void enterCharacter(Char c);
 };

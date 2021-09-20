@@ -4,6 +4,7 @@
 #endif
 
 #include "editor.h"
+#include "renderer.h"
 
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
@@ -44,6 +45,7 @@ int main() {
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f); // TODO: abstract this into editor background color
 
     Editor editor;
+    Renderer renderer;
 
     glfwSetWindowUserPointer(window, &editor);
 

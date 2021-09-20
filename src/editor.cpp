@@ -4,6 +4,7 @@
 #include <iostream>
 #include <locale>
 
+/*
 std::string toUtf8(char32_t codepoint) {
     auto& cvt = std::use_facet<std::codecvt<char32_t, char, std::mbstate_t>>(std::locale());
 
@@ -17,9 +18,10 @@ std::string toUtf8(char32_t codepoint) {
 
     return out;
 }
+*/
 
 void Editor::handleTextInput(unsigned int codepoint) {
-    std::cout << toUtf8(codepoint) << "\n";
+    enterCharacter(codepoint);
 }
 
 void Editor::handleSpecialKeyInput(int key, int mods) { // TODO: actually handle special inputs
@@ -35,8 +37,8 @@ void Editor::handleMouseButton(int button, int mods, unsigned int xpos, unsigned
     }
 }
 
-void Editor::enterCharacter(Char character) { // TODO: implement this
-    std::cout << character << std::endl;
+void Editor::enterCharacter(Char c) { // TODO: implement this
+    std::cout << c << std::endl;
 }
 
 Coordinates Editor::screenPosToCoordinates(unsigned int xpos, unsigned int ypos) const {  // TODO: implement this with character height?
