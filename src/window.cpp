@@ -1,7 +1,5 @@
 #include "window.h"
 
-#include "draw.h"
-
 #include <stdexcept>
 
 namespace cgull {
@@ -33,30 +31,14 @@ namespace cgull {
 
         glfwSetKeyCallback(glfw_window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
             if (action != GLFW_RELEASE) {
-                key_mods km;
-                switch (mods) {
-                    case GLFW_MOD_SHIFT:
-                        km = key_mods::shift;
-                        break;
-                    case GLFW_MOD_CONTROL:
-                        km = key_mods::ctrl;
-                        break;
-                    case GLFW_MOD_ALT:
-                        km = key_mods::alt;
-                        break;
-                    case GLFW_MOD_SUPER:
-                        km = key_mods::super;
-                        break;
-                    case GLFW_MOD_CAPS_LOCK:
-                        km = key_mods::caps_lock;
-                        break;
-                    case GLFW_MOD_NUM_LOCK:
-                        km = key_mods::num_lock;
-                        break;
-                    default:
-                        km = key_mods::none;
-                        break;
-                }
+                unsigned int km = static_cast<unsigned int>(key_mods::none);
+                if (mods & GLFW_MOD_SHIFT) km |= static_cast<unsigned int>(key_mods::shift);
+                if (mods & GLFW_MOD_CONTROL) km |= static_cast<unsigned int>(key_mods::ctrl);
+                if (mods & GLFW_MOD_ALT) km |= static_cast<unsigned int>(key_mods::alt);
+                if (mods & GLFW_MOD_SUPER) km |= static_cast<unsigned int>(key_mods::super);
+                if (mods & GLFW_MOD_CAPS_LOCK) km |= static_cast<unsigned int>(key_mods::caps_lock);
+                if (mods & GLFW_MOD_NUM_LOCK) km |= static_cast<unsigned int>(key_mods::num_lock);
+
                 static_cast<struct window*>(glfwGetWindowUserPointer(window))->pending_action = special_key_action{static_cast<key_code>(key), km};
             }
         });
@@ -73,11 +55,9 @@ namespace cgull {
                 static_cast<struct window*>(glfwGetWindowUserPointer(window))->pending_action = click_action{c, mb};
             }
         });
-
-        init_gl(glfwGetProcAddress); // I don't want to include glfw in draw.h
     }
 
-    std::optional<action> window::run() {
+    std::optional<action> window::update() {
         if (pending_action.has_value()) {
             pending_action = std::nullopt; // reset the action so we don't execute it twice
         }
@@ -87,5 +67,9 @@ namespace cgull {
         glfwWaitEvents();
 
         return pending_action;
+    }
+
+    bool window::should_close() const {
+        return glfwWindowShouldClose(glfw_window);
     }
 }

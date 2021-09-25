@@ -1,75 +1,28 @@
 #pragma once
 
-#include <GLFW/glfw3.h>
+#include "coord.h"
+#include "buffer.h"
+#include "inputs.h"
 
-#include <vector>
-#include <string>
+#include <variant>
 
-namespace {
-    typedef uint32_t Char;
+namespace cgull {
+    struct char_action { key_code key; };
+    struct special_key_action { key_code key; unsigned int mods; };
+    struct click_action { coord click_coord; mouse_button mb; };
+    struct resize_action { coord size; };
 
-    struct Glyph {
-        Char mChar;
+    using action = std::variant<char_action,
+                                special_key_action,
+                                click_action,
+                                resize_action>;
+
+    struct editor {
+        coord window_size;
+        key_map keys;
+        buffer buf;
+
+        editor(key_map km);
+        void update(action a);
     };
-
-    typedef std::vector<Glyph> Line;
-    typedef std::vector<Line> Lines;
-
-    struct Coordinates {
-        unsigned int mLine, mColumn;
-        Coordinates() : mLine(0), mColumn(0) {}
-        Coordinates(unsigned int line, unsigned int column) : mLine(line), mColumn(column) {}
-
-        bool operator ==(const Coordinates& o) const {
-            return mLine == o.mLine && mColumn == o.mColumn;
-        }
-
-        bool operator !=(const Coordinates& o) const {
-            return mLine != o.mLine || mColumn != o.mColumn;
-        }
-
-        bool operator <(const Coordinates& o) const {
-            if (mLine != o.mLine)
-                return mLine < o.mLine;
-            return mColumn < o.mColumn;
-        }
-
-        bool operator >(const Coordinates& o) const {
-            if (mLine != o.mLine)
-                return mLine > o.mLine;
-            return mColumn > o.mColumn;
-        }
-
-        bool operator <=(const Coordinates& o) const {
-            if (mLine != o.mLine)
-                return mLine < o.mLine;
-            return mColumn <= o.mColumn;
-        }
-
-        bool operator >=(const Coordinates& o) const {
-            if (mLine != o.mLine)
-                return mLine > o.mLine;
-            return mColumn >= o.mColumn;
-        }
-    };
-
-    struct EditorState {
-        Coordinates mSelectionStart;
-        Coordinates mSelectionEnd;
-        Coordinates mCursorPosition;
-    };
-};
-
-class Editor {
-public:
-    void handleTextInput(unsigned int codepoint);
-    void handleSpecialKeyInput(int key, int mods);
-    void handleMouseButton(int button, int mods, unsigned int xpos, unsigned int ypos);
-private:
-    Lines mLines;
-    Coordinates mCoords;
-    EditorState mState;
-
-    Coordinates screenPosToCoordinates(unsigned int xpos, unsigned int ypos) const;
-    void enterCharacter(Char c);
-};
+}

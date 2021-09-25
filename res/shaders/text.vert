@@ -14,7 +14,7 @@ struct glyph {
 };
 
 layout (std140) uniform glyphs {
-    glyph glyph_array[];
+    glyph glyph_array[1024]; // must be constant and current font (RobotoMono-Regular) has 876 glyphs
 };
 
 void main() {

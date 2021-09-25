@@ -1,6 +1,6 @@
 #pragma once
 
-#include "application.h"
+#include "editor.h"
 
 #define GLFW_INCLUDE_NONE
 #ifdef __APPLE__
@@ -14,7 +14,8 @@ namespace cgull {
 
     struct window {
         window();
-        std::optional<action> run();
+        std::optional<action> update();
+        bool should_close() const;
 
     private:
         GLFWwindow* glfw_window;

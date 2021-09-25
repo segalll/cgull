@@ -1,18 +1,14 @@
 #pragma once
 
-#include "shader.h"
-
-#include <ft2build.h>
-#include FT_FREETYPE_H
+#include "editor.h"
 
 #include <unordered_map>
-#include <vector>
 #include <queue>
 #include <functional>
 #include <memory>
 
 namespace {
-    struct GlyphInfo {
+    struct glyph_info {
         float ax, ay; // advance.x, advance.y
         float bw, bh; // bitmap.width, bitmap.rows
         float bl, bt; // bitmap_left, bitmap_top
@@ -20,16 +16,15 @@ namespace {
     };
 }
 
-class Renderer {
-public:
-    Renderer();
-
-    void renderText(const std::vector<std::vector<unsigned int>>& text);
-private:
-    std::unordered_map<unsigned int, GlyphInfo> glyphMap;
-    std::queue<std::function<void()>> drawQueue;
-    Shader textShader;
-    std::unique_ptr<std::vector<std::vector<unsigned int>>> textToRender;
-
-    void loadGlyphs();
-};
+namespace cgull {
+    struct renderer {
+        renderer();
+        void render(const editor& app);
+        void draw_text(const buffer& buf, coord size);
+        std::unordered_map<key_code, glyph_info> glyph_map;
+        std::queue<std::function<void()>> draw_queue;
+        std::unique_ptr<std::vector<std::vector<key_code>>> textToRender;
+    private:
+        void load_glyphs();
+    };
+}
