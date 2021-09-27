@@ -1,6 +1,7 @@
 #include "window.h"
 
 #include <stdexcept>
+#include <iostream>
 
 namespace cgull {
     window::window() {
@@ -26,7 +27,9 @@ namespace cgull {
         glfwSetWindowUserPointer(glfw_window, this);
 
         glfwSetCharCallback(glfw_window, [](GLFWwindow* window, unsigned int codepoint) {
-            static_cast<struct window*>(glfwGetWindowUserPointer(window))->pending_action = char_action{codepoint};
+            static_cast<struct window*>(
+                glfwGetWindowUserPointer(window)
+            )->pending_actions.push_back(char_action{codepoint});
         });
 
         glfwSetKeyCallback(glfw_window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -39,7 +42,9 @@ namespace cgull {
                 if (mods & GLFW_MOD_CAPS_LOCK) km |= static_cast<unsigned int>(key_mods::caps_lock);
                 if (mods & GLFW_MOD_NUM_LOCK) km |= static_cast<unsigned int>(key_mods::num_lock);
 
-                static_cast<struct window*>(glfwGetWindowUserPointer(window))->pending_action = special_key_action{static_cast<key_code>(key), km};
+                static_cast<struct window*>(
+                    glfwGetWindowUserPointer(window)
+                )->pending_actions.push_back(special_key_action{static_cast<key_code>(key), km});
             }
         });
 
@@ -52,24 +57,31 @@ namespace cgull {
                     static_cast<index>(ypos)
                 };
                 mouse_button mb = button == GLFW_MOUSE_BUTTON_LEFT ? mouse_button::left : mouse_button::right;
-                static_cast<struct window*>(glfwGetWindowUserPointer(window))->pending_action = click_action{c, mb};
+                static_cast<struct window*>(
+                    glfwGetWindowUserPointer(window)
+                )->pending_actions.push_back(click_action{c, mb});
             }
         });
-    }
-
-    std::optional<action> window::update() {
-        if (pending_action.has_value()) {
-            pending_action = std::nullopt; // reset the action so we don't execute it twice
-        }
 
         glfwSwapBuffers(glfw_window);
+    }
+
+    std::vector<action> window::update() {
+        if (!pending_actions.empty()) {
+            pending_actions.clear();
+            glfwSwapBuffers(glfw_window);
+        }
 
         glfwWaitEvents();
 
-        return pending_action;
+        return pending_actions;
     }
 
     bool window::should_close() const {
         return glfwWindowShouldClose(glfw_window);
+    }
+
+    void window::swap_buffer() {
+        glfwSwapBuffers(glfw_window);
     }
 }

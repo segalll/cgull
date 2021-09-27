@@ -4,17 +4,20 @@
 
 int main() {
     cgull::window w;
-    cgull::editor a({
+    cgull::renderer r;
+    cgull::editor e({
         {{'p'}, "move-up"}
     });
-    cgull::renderer r;
+
+    r.render(e);
+    w.swap_buffer(); // update the window after we drew the initial state
 
     while (!w.should_close()) {
-        const auto action = w.update();
+        const auto actions = w.update();
 
-        if (action.has_value()) {
-            a.update(action.value());
-            r.render(a);
+        if (!actions.empty()) {
+            e.update(actions);
+            r.render(e);
         }
     }
 

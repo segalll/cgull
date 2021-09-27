@@ -14,9 +14,12 @@ namespace cgull {
             throw std::runtime_error("failed to initialize OpenGL context\n");
         }
         load_glyphs();
+
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     }
 
     void renderer::render(const editor& app) {
+        glClear(GL_COLOR_BUFFER_BIT);
         draw_text(app.buf, app.window_size);
     }
 

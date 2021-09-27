@@ -23,6 +23,6 @@ namespace cgull {
         buffer buf;
 
         editor(key_map km);
-        void update(action a);
+        void update(std::vector<action> actions);
     };
 }

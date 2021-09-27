@@ -8,17 +8,18 @@
 #endif
 #include <GLFW/glfw3.h>
 
-#include <optional>
+#include <vector>
 
 namespace cgull {
 
     struct window {
         window();
-        std::optional<action> update();
+        std::vector<action> update();
         bool should_close() const;
+        void swap_buffer(); // only for the initial buffer swap
 
     private:
         GLFWwindow* glfw_window;
-        std::optional<action> pending_action;
+        std::vector<action> pending_actions;
     };
 }
