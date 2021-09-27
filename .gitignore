@@ -18,5 +18,5 @@ bin
 # cache (currently just for clangd)
 .cache
 
-$ MacOS DS_Store files
+# MacOS DS_Store files
 .DS_Store
