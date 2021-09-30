@@ -13,7 +13,6 @@ namespace {
         float bw, bh; // bitmap.width, bitmap.rows
         float bl, bt; // bitmap_left, bitmap_top
         float tx; // texture coordinate x offset
-        float padding;
     };
 }
 
@@ -29,8 +28,11 @@ namespace cgull {
     private:
         void load_glyphs();
         void init_render_data();
+        std::vector<float> generate_batched_vertices(const std::string& text);
         unsigned int text_vao, text_vbo;
+        unsigned int text_texture;
         unsigned int text_shader;
         unsigned int glyph_ubo;
+        unsigned int font_atlas_width, font_atlas_height;
     };
 }

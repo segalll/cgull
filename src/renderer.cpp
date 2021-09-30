@@ -19,6 +19,8 @@ namespace cgull {
         init_render_data();
 
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+
+        generate_batched_vertices("hello");
     }
 
     void renderer::render(const editor& app) {
@@ -27,7 +29,14 @@ namespace cgull {
     }
 
     void renderer::draw_text(const buffer &buf, coord size) {
+        glBindVertexArray(text_vao);
+        glBindTexture(GL_TEXTURE_2D, text_texture);
         glUseProgram(text_shader);
+        const auto vertices = generate_batched_vertices("hey");
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices.data(), GL_STATIC_DRAW);
+        float c[] = { 1.0, 1.0, 1.0 };
+        glUniform3fv(glGetUniformLocation(text_shader, "color"), 1, &c[0]);
+        glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 6, 1);
     }
 
     void renderer::load_glyphs() {
@@ -43,25 +52,33 @@ namespace cgull {
 
         FT_Set_Pixel_Sizes(face, 0, 48);
 
-        unsigned int w, h = 0;
         unsigned int gindex;
         unsigned int charcode = FT_Get_First_Char(face, &gindex);
         while (gindex != 0) {
             if (FT_Load_Char(face, charcode, FT_LOAD_RENDER)) {
                 std::cout << "failed to load glyph\n";
             } else {
-                w += face->glyph->bitmap.width;
-                h = std::max(h, face->glyph->bitmap.rows);
+                font_atlas_width += face->glyph->bitmap.width;
+                font_atlas_height = std::max(font_atlas_height, face->glyph->bitmap.rows);
             }
 
             charcode = FT_Get_Next_Char(face, charcode, &gindex);
         }
 
-        unsigned int texture;
-        glGenTextures(1, &texture);
-        glBindTexture(GL_TEXTURE_2D, texture);
+        glGenTextures(1, &text_texture);
+        glBindTexture(GL_TEXTURE_2D, text_texture);
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, w, h, 0, GL_RED, GL_UNSIGNED_BYTE, 0);
+        glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            GL_RED,
+            font_atlas_width,
+            font_atlas_height,
+            0,
+            GL_RED,
+            GL_UNSIGNED_BYTE, 
+            0
+        );
 
         unsigned int x = 0;
         charcode = FT_Get_First_Char(face, &gindex);
@@ -89,8 +106,7 @@ namespace cgull {
                 static_cast<float>(face->glyph->bitmap.rows),
                 static_cast<float>(face->glyph->bitmap_left),
                 static_cast<float>(face->glyph->bitmap_top),
-                static_cast<float>(x) / static_cast<float>(w),
-                0.0f
+                static_cast<float>(x) / static_cast<float>(font_atlas_width)
             });
 
             glyph_map[charcode] = glyph_list.size() - 1;
@@ -123,12 +139,47 @@ namespace cgull {
         glBindBuffer(GL_ARRAY_BUFFER, text_vbo);
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices.data(), GL_STATIC_DRAW);
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 
         glGenBuffers(1, &glyph_ubo);
         glBindBuffer(GL_UNIFORM_BUFFER, glyph_ubo);
         glBufferData(GL_UNIFORM_BUFFER, sizeof(glyph_list), glyph_list.data(), GL_STATIC_DRAW);
 
         glBindVertexArray(0);
+    }
+
+    std::vector<float> renderer::generate_batched_vertices(const std::string& text) {
+        std::vector<float> vertices;
+
+        const float scale = 1.0f;
+
+        float x = 0.2f;
+        float y = 0.2f;
+
+        for (char c : text) {
+            const auto& glyph = glyph_list[glyph_map[static_cast<key_code>(c)]];
+
+            const float xpos = x + glyph.bl * scale;
+            const float ypos = y - (glyph.bh - glyph.bt) * scale;
+
+            const float w = glyph.bw * scale;
+            const float h = glyph.bh * scale;
+
+            const float tw = glyph.bw / static_cast<float>(font_atlas_width);
+            const float th = glyph.bh / static_cast<float>(font_atlas_height);
+
+            vertices.insert(vertices.end(), {
+                xpos + w, ypos + h, glyph.tx + tw, 0.0f,
+                xpos,     ypos + h, glyph.tx,      0.0f,
+                xpos,     ypos,     glyph.tx,      th,
+                xpos,     ypos,     glyph.tx,      th,
+                xpos + w, ypos,     glyph.tx + tw, th,
+                xpos + w, ypos + h, glyph.tx + tw, 0.0f
+            });
+        }
+
+        return vertices;
     }
 }
