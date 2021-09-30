@@ -13,6 +13,7 @@ namespace {
         float bw, bh; // bitmap.width, bitmap.rows
         float bl, bt; // bitmap_left, bitmap_top
         float tx; // texture coordinate x offset
+        float padding;
     };
 }
 
@@ -21,10 +22,15 @@ namespace cgull {
         renderer();
         void render(const editor& app);
         void draw_text(const buffer& buf, coord size);
-        std::unordered_map<key_code, glyph_info> glyph_map;
-        std::queue<std::function<void()>> draw_queue;
+        std::vector<glyph_info> glyph_list;
+        std::unordered_map<key_code, unsigned int> glyph_map; // index into glyph_list
+        // std::queue<std::function<void()>> draw_queue; // probably don't need this
         std::unique_ptr<std::vector<std::vector<key_code>>> textToRender;
     private:
         void load_glyphs();
+        void init_render_data();
+        unsigned int text_vao, text_vbo;
+        unsigned int text_shader;
+        unsigned int glyph_ubo;
     };
 }

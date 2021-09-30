@@ -7,8 +7,9 @@ layout (location = 2) in uint a_glyph_id;
 out float v_tex_coord_x;
 
 struct glyph {
+    vec2 advance;
     vec2 size;
-    vec2 anchor;
+    vec2 bearing;
     float tex_coord_x;
     float padding;
 };
@@ -18,6 +19,12 @@ layout (std140) uniform glyphs {
 };
 
 void main() {
-    v_tex_coord_x = glyph_array[a_glyph_id].tex_coord_x;
-    gl_Position = vec4(a_vertex * glyph_array[a_glyph_id].size + a_position, 0.0, 0.0);
+    glyph g = glyph_array[a_glyph_id];
+
+    vec2 pos = vec2(a_position.x + g.bearing.x, a_position.y - (g.size.y - g.bearing.y));
+    // maybe * scale at end of each pos dimension
+    // maybe make size g.size * scale
+
+    v_tex_coord_x = g.tex_coord_x;
+    gl_Position = vec4(a_vertex * g.size + pos, 0.0, 0.0);
 }

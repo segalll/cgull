@@ -12,7 +12,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 add_subdirectory(deps)
 
-add_executable(cgull src/main.cpp src/window.cpp src/editor.cpp src/renderer.cpp)
+add_executable(cgull src/main.cpp src/window.cpp src/editor.cpp src/renderer.cpp src/shader.cpp)
 
 set_property(TARGET cgull PROPERTY CXX_STANDARD 20)
 

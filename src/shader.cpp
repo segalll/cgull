@@ -2,75 +2,12 @@
 
 #include <glad/gl.h>
 
-#include <fstream>
-#include <sstream>
 #include <iostream>
+#include <sstream>
+#include <fstream>
 
-Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath) {
-    std::string vertexCode, fragmentCode;
-    std::ifstream vShaderFile, fShaderFile;
-
-    vShaderFile.exceptions(std::ifstream::failbit| std::ifstream::badbit);
-    fShaderFile.exceptions(std::ifstream::failbit| std::ifstream::badbit);
-    try {
-        vShaderFile.open(vertexPath);
-        fShaderFile.open(fragmentPath);
-        std::stringstream vShaderStream, fShaderStream;
-
-        vShaderStream << vShaderFile.rdbuf();
-        fShaderStream << fShaderFile.rdbuf();
-
-        vShaderFile.close();
-        fShaderFile.close();
-
-        vertexCode = vShaderStream.str();
-        fragmentCode = fShaderStream.str();
-    } catch(std::ifstream::failure e) {
-        std::cout << "Failed to read shader file\n";
-    }
-
-    const char* vShaderCode = vertexCode.c_str();
-    const char* fShaderCode = fragmentCode.c_str();
-
-    unsigned int vertex = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex, 1, &vShaderCode, nullptr);
-    glCompileShader(vertex);
-    checkCompileErrors(vertex, "VERTEX");
-
-    unsigned int fragment = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment, 1, &fShaderCode, nullptr);
-    glCompileShader(fragment);
-    checkCompileErrors(fragment, "FRAGMENT");
-
-    mProgram = glCreateProgram();
-    glAttachShader(mProgram, vertex);
-    glAttachShader(mProgram, fragment);
-    glLinkProgram(mProgram);
-    checkCompileErrors(mProgram, "PROGRAM");
-    glDeleteShader(vertex);
-    glDeleteShader(fragment);
-}
-
-void Shader::use() {
-    glUseProgram(mProgram);
-}
-
-void Shader::setUint(const std::string &name, unsigned int value) const {
-    glUniform1ui(glGetUniformLocation(mProgram, name.c_str()), value);
-}
-
-void Shader::setVec2(const std::string &name, float x, float y) const {
-    float vec2[] = {x, y};
-    glUniform2fv(glGetUniformLocation(mProgram, name.c_str()), 2, vec2);
-}
-
-void Shader::setVec3(const std::string &name, float x, float y, float z) const {
-    float vec3[] = {x, y, z};
-    glUniform3fv(glGetUniformLocation(mProgram, name.c_str()), 3, vec3);
-}
-
-void Shader::checkCompileErrors(unsigned int shader, const std::string& type) {
-    int success;
+void check_compile_errors(unsigned int shader, const std::string& type) {
+	int success;
     char infoLog[1024];
     if (type != "PROGRAM") {
         glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
@@ -85,4 +22,53 @@ void Shader::checkCompileErrors(unsigned int shader, const std::string& type) {
             std::cout << "Program failed to link (type: " << type << ")\n" << infoLog << "\n\n";
         }
     }
+}
+
+namespace cgull {
+	unsigned int create_shader(const std::string& vertex_path, const std::string& fragment_path) {
+	    std::string vertex_code, fragment_code;
+	    std::ifstream v_shader_file, f_shader_file;
+
+	    v_shader_file.exceptions(std::ifstream::failbit| std::ifstream::badbit);
+	    f_shader_file.exceptions(std::ifstream::failbit| std::ifstream::badbit);
+	    try {
+	        v_shader_file.open(vertex_path);
+	        f_shader_file.open(fragment_path);
+	        std::stringstream v_shader_stream, f_shader_stream;
+
+	        v_shader_stream << v_shader_file.rdbuf();
+	        f_shader_stream << f_shader_file.rdbuf();
+
+	        v_shader_file.close();
+	        f_shader_file.close();
+
+	        vertex_code = v_shader_stream.str();
+	        fragment_code = f_shader_stream.str();
+	    } catch(std::ifstream::failure e) {
+	    	throw std::runtime_error("failed to read shader file");
+	    }
+
+	    const char* v_shader_code = vertex_code.c_str();
+	    const char* f_shader_code = fragment_code.c_str();
+
+	    unsigned int vertex = glCreateShader(GL_VERTEX_SHADER);
+	    glShaderSource(vertex, 1, &v_shader_code, nullptr);
+	    glCompileShader(vertex);
+	    check_compile_errors(vertex, "VERTEX");
+
+	    unsigned int fragment = glCreateShader(GL_FRAGMENT_SHADER);
+	    glShaderSource(fragment, 1, &f_shader_code, nullptr);
+	    glCompileShader(fragment);
+	    check_compile_errors(fragment, "FRAGMENT");
+
+	    unsigned int program = glCreateProgram();
+	    glAttachShader(program, vertex);
+	    glAttachShader(program, fragment);
+	    glLinkProgram(program);
+	    check_compile_errors(program, "PROGRAM");
+	    glDeleteShader(vertex);
+	    glDeleteShader(fragment);
+
+	    return program;
+	}
 }
