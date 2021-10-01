@@ -1,5 +1,6 @@
 #include "window.h"
 
+#include <GLFW/glfw3.h>
 #include <stdexcept>
 #include <iostream>
 
@@ -53,8 +54,8 @@ namespace cgull {
                 double xpos, ypos;
                 glfwGetCursorPos(window, &xpos, &ypos);
                 coord c = {
-                    static_cast<index>(xpos),
-                    static_cast<index>(ypos)
+                    static_cast<index>(ypos),
+                    static_cast<index>(xpos)
                 };
                 mouse_button mb = button == GLFW_MOUSE_BUTTON_LEFT ? mouse_button::left : mouse_button::right;
                 static_cast<struct window*>(
@@ -63,7 +64,16 @@ namespace cgull {
             }
         });
 
-        glfwSwapBuffers(glfw_window);
+        glfwSetFramebufferSizeCallback(glfw_window, [](GLFWwindow* window, int width, int height) {
+            coord c = {
+                static_cast<index>(height),
+                static_cast<index>(width)
+            };
+
+            static_cast<struct window*>(
+                glfwGetWindowUserPointer(window)
+            )->pending_actions.push_back(resize_action{c});
+        });
     }
 
     std::vector<action> window::update() {

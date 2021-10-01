@@ -6,6 +6,9 @@
 #include <GLFW/glfw3.h> // sadly I must include for glfwGetProcAddress
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <stdexcept>
 #include <iostream>
@@ -18,25 +21,34 @@ namespace cgull {
         load_glyphs();
         init_render_data();
 
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-
-        generate_batched_vertices("hello");
     }
 
-    void renderer::render(const editor& app) {
+    void renderer::render(const editor& e) {
+        if (gl_window_size != e.window_size) {
+            gl_window_size = e.window_size;
+            update_projection();
+        }
         glClear(GL_COLOR_BUFFER_BIT);
-        draw_text(app.buf, app.window_size);
+        draw_text(e.buf);
     }
 
-    void renderer::draw_text(const buffer &buf, coord size) {
-        glBindVertexArray(text_vao);
+    void renderer::draw_text(const buffer &buf) {
         glBindTexture(GL_TEXTURE_2D, text_texture);
+        glBindVertexArray(text_vao);
         glUseProgram(text_shader);
-        const auto vertices = generate_batched_vertices("hey");
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices.data(), GL_STATIC_DRAW);
+        std::string s = "hello world";
+        const auto vertices = generate_batched_vertices(s);
+
+        glBindBuffer(GL_ARRAY_BUFFER, text_vbo);
+        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+        
         float c[] = { 1.0, 1.0, 1.0 };
         glUniform3fv(glGetUniformLocation(text_shader, "color"), 1, &c[0]);
-        glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 6, 1);
+        glDrawArrays(GL_TRIANGLES, 0, 6 * s.size());
     }
 
     void renderer::load_glyphs() {
@@ -50,24 +62,37 @@ namespace cgull {
             throw std::runtime_error("failed to load font");
         }
 
-        FT_Set_Pixel_Sizes(face, 0, 48);
+        FT_Set_Pixel_Sizes(face, 0, 16);
+
+        unsigned int roww = 0;
+        unsigned int rowh = 0;
 
         unsigned int gindex;
         unsigned int charcode = FT_Get_First_Char(face, &gindex);
         while (gindex != 0) {
             if (FT_Load_Char(face, charcode, FT_LOAD_RENDER)) {
                 std::cout << "failed to load glyph\n";
-            } else {
-                font_atlas_width += face->glyph->bitmap.width;
-                font_atlas_height = std::max(font_atlas_height, face->glyph->bitmap.rows);
+                charcode = FT_Get_Next_Char(face, charcode, &gindex);
+                continue;
             }
+
+            if (roww + face->glyph->bitmap.width + 1 >= GL_MAX_TEXTURE_SIZE) {
+                font_atlas_width = std::max(font_atlas_width, roww);
+                font_atlas_height += rowh;
+                roww = 0;
+                rowh = 0;
+            }
+            roww += face->glyph->bitmap.width + 1;
+            rowh = std::max(rowh, face->glyph->bitmap.rows);
 
             charcode = FT_Get_Next_Char(face, charcode, &gindex);
         }
 
+        font_atlas_width = std::max(font_atlas_width, roww);
+        font_atlas_height += rowh;
+
         glGenTextures(1, &text_texture);
         glBindTexture(GL_TEXTURE_2D, text_texture);
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         glTexImage2D(
             GL_TEXTURE_2D,
             0,
@@ -77,21 +102,36 @@ namespace cgull {
             0,
             GL_RED,
             GL_UNSIGNED_BYTE, 
-            0
+            nullptr
         );
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        unsigned int x = 0;
+        int x = 0;
+        int y = 0;
+        rowh = 0;
+
         charcode = FT_Get_First_Char(face, &gindex);
         while (gindex != 0) {
             if (FT_Load_Char(face, charcode, FT_LOAD_RENDER)) {
+                charcode = FT_Get_Next_Char(face, charcode, &gindex);
                 continue;
+            }
+
+            if (x + face->glyph->bitmap.width + 1 >= GL_MAX_TEXTURE_SIZE) {
+                y += rowh;
+                rowh = 0;
+                x = 0;
             }
 
             glTexSubImage2D(
                 GL_TEXTURE_2D,
                 0,
                 x,
-                0,
+                y,
                 face->glyph->bitmap.width,
                 face->glyph->bitmap.rows,
                 GL_RED,
@@ -106,12 +146,14 @@ namespace cgull {
                 static_cast<float>(face->glyph->bitmap.rows),
                 static_cast<float>(face->glyph->bitmap_left),
                 static_cast<float>(face->glyph->bitmap_top),
-                static_cast<float>(x) / static_cast<float>(font_atlas_width)
+                static_cast<float>(x) / static_cast<float>(font_atlas_width),
+                static_cast<float>(y) / static_cast<float>(font_atlas_height)
             });
 
             glyph_map[charcode] = glyph_list.size() - 1;
 
-            x += face->glyph->bitmap.width;
+            rowh = std::max(rowh, face->glyph->bitmap.rows);
+            x += face->glyph->bitmap.width + 1;
 
             charcode = FT_Get_Next_Char(face, charcode, &gindex);
         }
@@ -123,29 +165,21 @@ namespace cgull {
     void renderer::init_render_data() {
         text_shader = create_shader("res/shaders/text.vert", "res/shaders/text.frag");
 
-        const std::vector<float> vertices{
-            // pos    // tex
-            1.0, 1.0, 1.0, 1.0,
-            0.0, 1.0, 0.0, 1.0,
-            0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0,
-            1.0, 0.0, 1.0, 0.0,
-            1.0, 1.0, 1.0, 1.0
-        };
-
         glGenVertexArrays(1, &text_vao);
         glGenBuffers(1, &text_vbo);
         glBindVertexArray(text_vao);
         glBindBuffer(GL_ARRAY_BUFFER, text_vbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices.data(), GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 
+
         glGenBuffers(1, &glyph_ubo);
         glBindBuffer(GL_UNIFORM_BUFFER, glyph_ubo);
-        glBufferData(GL_UNIFORM_BUFFER, sizeof(glyph_list), glyph_list.data(), GL_STATIC_DRAW);
+
+        update_projection();
 
         glBindVertexArray(0);
     }
@@ -155,8 +189,8 @@ namespace cgull {
 
         const float scale = 1.0f;
 
-        float x = 0.2f;
-        float y = 0.2f;
+        float x = 300.0f;
+        float y = 1000.0f;
 
         for (char c : text) {
             const auto& glyph = glyph_list[glyph_map[static_cast<key_code>(c)]];
@@ -171,15 +205,29 @@ namespace cgull {
             const float th = glyph.bh / static_cast<float>(font_atlas_height);
 
             vertices.insert(vertices.end(), {
-                xpos + w, ypos + h, glyph.tx + tw, 0.0f,
-                xpos,     ypos + h, glyph.tx,      0.0f,
-                xpos,     ypos,     glyph.tx,      th,
-                xpos,     ypos,     glyph.tx,      th,
-                xpos + w, ypos,     glyph.tx + tw, th,
-                xpos + w, ypos + h, glyph.tx + tw, 0.0f
+                xpos + w, ypos + h, glyph.tx + tw, glyph.ty,
+                xpos,     ypos + h, glyph.tx,      glyph.ty,
+                xpos,     ypos,     glyph.tx,      glyph.ty + th,
+                xpos,     ypos,     glyph.tx,      glyph.ty + th,
+                xpos + w, ypos,     glyph.tx + tw, glyph.ty + th,
+                xpos + w, ypos + h, glyph.tx + tw, glyph.ty
             });
+            x += glyph.ax * scale;
+            y += glyph.ay * scale;
         }
 
         return vertices;
+    }
+
+    void renderer::update_projection() {
+        const glm::mat4 m = glm::ortho(
+            0.0f, static_cast<float>(gl_window_size.col),
+            0.0f, static_cast<float>(gl_window_size.row)
+        );
+
+        glBindBuffer(GL_UNIFORM_BUFFER, glyph_ubo);
+        glBufferData(GL_UNIFORM_BUFFER, sizeof(m), glm::value_ptr(m), GL_STATIC_DRAW);
+        glUniformBlockBinding(text_shader, glGetUniformBlockIndex(text_shader, "matrices"), 0);
+        glBindBufferBase(GL_UNIFORM_BUFFER, 0, glyph_ubo);
     }
 }

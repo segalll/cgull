@@ -34,6 +34,9 @@ namespace cgull {
                     std::cout << "ctrl-alt+";
                 }
                 std::cout << ska.key << "\n";
+            } else if (std::holds_alternative<resize_action>(a)) {
+                const auto ra = std::get<resize_action>(a);
+                window_size = ra.size;
             }
         }
     }

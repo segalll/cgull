@@ -18,6 +18,7 @@ set_property(TARGET cgull PROPERTY CXX_STANDARD 20)
 
 find_package(Freetype REQUIRED)
 find_package(glfw3 3.3 REQUIRED)
+find_package(glm REQUIRED)
 
 target_include_directories(cgull PRIVATE ${FREETYPE_INCLUDE_DIRS})
 target_link_libraries(cgull PRIVATE glfw ${FREETYPE_LIBRARIES} glad)
