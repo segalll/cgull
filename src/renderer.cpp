@@ -14,7 +14,9 @@
 #include <iostream>
 
 namespace cgull {
-    renderer::renderer() {
+    renderer::renderer(coord window_size) {
+        gl_window_size = window_size;
+
         if (gladLoadGL(glfwGetProcAddress) == 0) {
             throw std::runtime_error("failed to initialize OpenGL context\n");
         }
@@ -174,7 +176,6 @@ namespace cgull {
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-
 
         glGenBuffers(1, &glyph_ubo);
         glBindBuffer(GL_UNIFORM_BUFFER, glyph_ubo);

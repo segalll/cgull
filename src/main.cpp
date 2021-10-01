@@ -6,8 +6,8 @@
 
 int main() {
     cgull::window w;
-    cgull::renderer r;
-    cgull::editor e({
+    cgull::renderer r(w.get_size());
+    cgull::editor e(w.get_size(), {
         {{'p'}, "move-up"}
     });
 

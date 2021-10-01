@@ -22,7 +22,7 @@ namespace cgull {
         key_map keys;
         buffer buf;
 
-        editor(key_map km);
+        editor(coord w_size, key_map km);
         void update(std::vector<action> actions);
     };
 }

@@ -22,7 +22,7 @@ namespace {
 */
 
 namespace cgull {
-    editor::editor(key_map km) : keys(km) {}
+    editor::editor(coord w_size, key_map km) : window_size(w_size), keys(km) {}
 
     void editor::update(std::vector<action> actions) {
         for (const auto& a : actions) {

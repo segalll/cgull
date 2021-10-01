@@ -94,4 +94,13 @@ namespace cgull {
     void window::swap_buffer() {
         glfwSwapBuffers(glfw_window);
     }
+
+    coord window::get_size() {
+        int width, height;
+        glfwGetWindowSize(glfw_window, &width, &height);
+        return coord{
+            static_cast<index>(height),
+            static_cast<index>(width)
+        };
+    }
 }

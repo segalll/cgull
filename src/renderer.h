@@ -18,7 +18,7 @@ namespace {
 
 namespace cgull {
     struct renderer {
-        renderer();
+        renderer(coord window_size);
         void render(const editor& e);
         void draw_text(const buffer& buf);
         std::vector<glyph_info> glyph_list;
