@@ -189,8 +189,8 @@ namespace cgull {
 
         const float scale = 1.0f;
 
-        float x = 300.0f;
-        float y = 1000.0f;
+        float x = 50.0f;
+        float y = 50.0f;
 
         for (char c : text) {
             const auto& glyph = glyph_list[glyph_map[static_cast<key_code>(c)]];
