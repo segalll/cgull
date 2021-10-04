@@ -1,2 +1,0 @@
-- fully switch to new architecture
-- instead of glyph array in shader, which doesn't work, pack all of that into vbo everytime :( (https://ahbejarano.gitbook.io/lwjglgamedev/chapter21)
