@@ -14,7 +14,7 @@
 #include <iostream>
 
 namespace cgull {
-    renderer::renderer(coord window_size) {
+    renderer::renderer(coord window_size, std::unique_ptr<editor> e) : editor_ptr(std::move(e)) {
         gl_window_size = window_size;
 
         if (gladLoadGL(glfwGetProcAddress) == 0) {
@@ -29,16 +29,12 @@ namespace cgull {
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     }
 
-    void renderer::render(const editor& e) {
-        if (gl_window_size != e.window_size) {
-            gl_window_size = e.window_size;
-            update_projection();
-        }
+    void renderer::render() {
         glClear(GL_COLOR_BUFFER_BIT);
-        draw_text(e.buf);
+        draw_text();
     }
 
-    void renderer::draw_text(const buffer &buf) {
+    void renderer::draw_text() {
         glBindTexture(GL_TEXTURE_2D, text_texture);
         glBindVertexArray(text_vao);
         glUseProgram(text_shader);
@@ -228,12 +224,6 @@ namespace cgull {
     }
 
     void renderer::update_projection() {
-        const glm::mat4 m = glm::ortho(
-            0.0f, static_cast<float>(gl_window_size.col),
-            0.0f, static_cast<float>(gl_window_size.row)
-        );
-
-        glBindBuffer(GL_UNIFORM_BUFFER, glyph_ubo);
-        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(m), glm::value_ptr(m));
+        glViewport(0, 0, 1366, 642);
     }
 }

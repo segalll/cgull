@@ -16,9 +16,9 @@ namespace {
 
 namespace cgull {
     struct renderer {
-        renderer(coord window_size);
-        void render(const editor& e);
-        void draw_text(const buffer& buf);
+        renderer(coord window_size, std::unique_ptr<editor> e);
+        void render();
+        void draw_text();
         std::vector<glyph_info> glyph_list;
         std::unordered_map<key_code, unsigned int> glyph_map; // index into glyph_list
         std::unique_ptr<std::vector<std::vector<key_code>>> textToRender;
@@ -33,5 +33,6 @@ namespace cgull {
         unsigned int glyph_ubo;
         unsigned int font_atlas_width, font_atlas_height = 0;
         coord gl_window_size;
+        std::unique_ptr<editor> editor_ptr;
     };
 }
