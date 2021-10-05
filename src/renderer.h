@@ -3,8 +3,6 @@
 #include "editor.h"
 
 #include <unordered_map>
-#include <queue>
-#include <functional>
 #include <memory>
 
 namespace {
@@ -23,7 +21,6 @@ namespace cgull {
         void draw_text(const buffer& buf);
         std::vector<glyph_info> glyph_list;
         std::unordered_map<key_code, unsigned int> glyph_map; // index into glyph_list
-        // std::queue<std::function<void()>> draw_queue; // probably don't need this
         std::unique_ptr<std::vector<std::vector<key_code>>> textToRender;
     private:
         void load_glyphs();

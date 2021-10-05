@@ -1,8 +1,6 @@
 #include "window.h"
 
-#include <GLFW/glfw3.h>
 #include <stdexcept>
-#include <iostream>
 
 namespace cgull {
     window::window() {

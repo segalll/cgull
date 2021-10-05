@@ -177,8 +177,15 @@ namespace cgull {
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 
+        const glm::mat4 m = glm::ortho(
+            0.0f, static_cast<float>(gl_window_size.col),
+            0.0f, static_cast<float>(gl_window_size.row)
+        );
         glGenBuffers(1, &glyph_ubo);
         glBindBuffer(GL_UNIFORM_BUFFER, glyph_ubo);
+        glBufferData(GL_UNIFORM_BUFFER, sizeof(m), glm::value_ptr(m), GL_STATIC_DRAW);
+        glUniformBlockBinding(text_shader, glGetUniformLocation(text_shader, "matrices"), 0);
+        glBindBufferBase(GL_UNIFORM_BUFFER, 0, glyph_ubo);
 
         update_projection();
 
@@ -227,8 +234,6 @@ namespace cgull {
         );
 
         glBindBuffer(GL_UNIFORM_BUFFER, glyph_ubo);
-        glBufferData(GL_UNIFORM_BUFFER, sizeof(m), glm::value_ptr(m), GL_STATIC_DRAW);
-        glUniformBlockBinding(text_shader, glGetUniformBlockIndex(text_shader, "matrices"), 0);
-        glBindBufferBase(GL_UNIFORM_BUFFER, 0, glyph_ubo);
+        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(m), glm::value_ptr(m));
     }
 }
