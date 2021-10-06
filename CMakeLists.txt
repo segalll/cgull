@@ -21,3 +21,7 @@ find_package(glfw3 3.3 REQUIRED)
 
 target_include_directories(cgull PRIVATE ${FREETYPE_INCLUDE_DIRS})
 target_link_libraries(cgull PRIVATE glfw ${FREETYPE_LIBRARIES} glad)
+
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+target_link_libraries(cgull PRIVATE Threads::Threads)
