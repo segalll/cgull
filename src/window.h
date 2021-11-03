@@ -1,14 +1,12 @@
 #pragma once
 
 #include "editor.h"
+#include "renderer.h"
 
-#define GLFW_INCLUDE_NONE
-#ifdef __APPLE__
-#define GL_SILENCE_DEPRECATION
-#endif
 #include <GLFW/glfw3.h>
 
 #include <vector>
+#include <memory>
 
 namespace cgull {
     struct window {
@@ -18,6 +16,7 @@ namespace cgull {
         void swap_buffer(); // only for the initial buffer swap
         coord get_size();
         GLFWwindow* glfw_window;
+        renderer* renderer_ptr;
         std::vector<action> pending_actions;
     };
 }

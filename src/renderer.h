@@ -1,6 +1,10 @@
 #pragma once
 
-#include "editor.h"
+#include "coord.h"
+#include "inputs.h"
+
+#include <glad/gl.h>
+#include <GLFW/glfw3.h>
 
 #include <unordered_map>
 #include <memory>
@@ -16,23 +20,22 @@ namespace {
 
 namespace cgull {
     struct renderer {
-        renderer(coord window_size, std::unique_ptr<editor> e);
-        void render();
-        void draw_text();
-        std::vector<glyph_info> glyph_list;
-        std::unordered_map<key_code, unsigned int> glyph_map; // index into glyph_list
-        std::unique_ptr<std::vector<std::vector<key_code>>> textToRender;
-    private:
-        void load_glyphs();
-        void init_render_data();
-        std::vector<float> generate_batched_vertices(const std::string& text);
-        void update_projection();
+        renderer(coord window_size);
+        std::unordered_map<key_code, glyph_info> glyph_map;
         unsigned int text_vao, text_vbo;
         unsigned int text_texture;
         unsigned int text_shader;
         unsigned int glyph_ubo;
         unsigned int font_atlas_width, font_atlas_height = 0;
-        coord gl_window_size;
-        std::unique_ptr<editor> editor_ptr;
+        coord window_size;
+        coord ubo_window_size;
+        bool should_redraw;
+        void render();
+        void load_glyphs();
+        std::vector<float> generate_batched_vertices(const std::string& text);
+        void draw_text();
+        void update_projection();
     };
+
+    void render_loop(renderer* r, GLFWwindow* glfw_window);
 }
