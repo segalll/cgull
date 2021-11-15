@@ -6,13 +6,6 @@
 #include <iostream>
 #include <sstream>
 
-namespace {
-    bool can_unindent(const std::u32string& l, unsigned int cursor_col) {
-        int indent_pos = l.find_first_not_of(U' ', cursor_col);
-        return indent_pos < 4 || l.substr(indent_pos - 4, 4) == U"    ";
-    }
-}
-
 namespace cgull {
     buffer::buffer() {
         content = {};
