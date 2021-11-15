@@ -8,18 +8,18 @@
 
 #include <iostream>
 #include <thread>
-#include <memory>
 
 int main() {
     cgull::window w;
     cgull::editor e(w.get_size(), {
         {{'p'}, "move-up"}
     });
-    cgull::renderer r(w.get_size());
+    cgull::renderer r(w.get_size(), &e.buf);
 
     w.renderer_ptr = &r;
 
     r.render();
+
     w.swap_buffer(); // update the window after we drew the initial state
 
     glfwMakeContextCurrent(nullptr);

@@ -22,5 +22,10 @@ namespace cgull {
         std::optional<coord> selection_start;
         std::vector<snapshot> history;
         std::optional<std::size_t> history_pos;
+
+        buffer();
+        void backspace();
+        void enter_char(unsigned int new_char);
+        void new_line();
     };
 }

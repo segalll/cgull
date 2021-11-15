@@ -1,7 +1,7 @@
 #pragma once
 
 namespace cgull {
-    using index = int;
+    using index = unsigned int;
 
     struct coord {
         index row = {};
@@ -12,5 +12,5 @@ namespace cgull {
         return a.row == b.row && a.col == b.col;
     }
 
-    coord coord_from_pixel(int x, int y);
+    coord coord_from_pixel(unsigned int x, unsigned int y);
 }

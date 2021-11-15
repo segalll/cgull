@@ -27,13 +27,14 @@ namespace cgull {
     void editor::update(std::vector<action> actions) {
         for (const auto& a : actions) {
             if (std::holds_alternative<char_action>(a)) {
-                std::cout << std::get<char_action>(a).key << "\n";
+                buf.enter_char(std::get<char_action>(a).key);
             } else if (std::holds_alternative<special_key_action>(a)) {
                 const auto ska = std::get<special_key_action>(a);
-                if (ska.mods & static_cast<unsigned int>(key_mods::ctrl) && ska.mods & static_cast<unsigned int>(key_mods::alt)) {
-                    std::cout << "ctrl-alt+";
+                if (ska.key == 257) {
+                    buf.new_line();
+                } else if (ska.key == 259) {
+                    buf.backspace();
                 }
-                std::cout << ska.key << "\n";
             } else if (std::holds_alternative<resize_action>(a)) {
                 const auto ra = std::get<resize_action>(a);
                 window_size = ra.size;

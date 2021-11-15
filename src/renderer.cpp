@@ -13,7 +13,7 @@
 #include <iostream>
 
 namespace cgull {
-    renderer::renderer(coord w_size) {
+    renderer::renderer(coord w_size, buffer* buf) : text_buffer(buf) {
         window_size = w_size;
         ubo_window_size = w_size;
 
@@ -24,6 +24,7 @@ namespace cgull {
         load_glyphs();
 
         text_shader = create_shader("res/shaders/text.vert", "res/shaders/text.frag");
+        text_cursor.shader = create_shader("res/shaders/cursor.vert", "res/shaders/cursor.frag");
 
         glGenVertexArrays(1, &text_vao);
         glGenBuffers(1, &text_vbo);
@@ -35,15 +36,24 @@ namespace cgull {
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 
+        glGenVertexArrays(1, &text_cursor.vao);
+        glGenBuffers(1, &text_cursor.vbo);
+        glBindVertexArray(text_cursor.vao);
+        glBindBuffer(GL_ARRAY_BUFFER, text_cursor.vbo);
+        glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
+
         const glm::mat4 m = glm::ortho(
             0.0f, static_cast<float>(ubo_window_size.col),
             0.0f, static_cast<float>(ubo_window_size.row)
         );
-        glGenBuffers(1, &glyph_ubo);
-        glBindBuffer(GL_UNIFORM_BUFFER, glyph_ubo);
+        glGenBuffers(1, &proj_ubo);
+        glBindBuffer(GL_UNIFORM_BUFFER, proj_ubo);
         glBufferData(GL_UNIFORM_BUFFER, sizeof(m), glm::value_ptr(m), GL_STATIC_DRAW);
         glUniformBlockBinding(text_shader, glGetUniformLocation(text_shader, "matrices"), 0);
-        glBindBufferBase(GL_UNIFORM_BUFFER, 0, glyph_ubo);
+        glUniformBlockBinding(text_cursor.shader, glGetUniformLocation(text_cursor.shader, "matrices"), 0);
+        glBindBufferBase(GL_UNIFORM_BUFFER, 0, proj_ubo);
 
         update_projection();
 
@@ -57,10 +67,12 @@ namespace cgull {
 
     void renderer::render() {
         glClear(GL_COLOR_BUFFER_BIT);
+
         if (ubo_window_size != window_size) {
             update_projection();
         }
         draw_text();
+        draw_cursor();
     }
 
     void renderer::load_glyphs() {
@@ -74,7 +86,8 @@ namespace cgull {
             throw std::runtime_error("failed to load font");
         }
 
-        FT_Set_Pixel_Sizes(face, 0, 16);
+        font_size = 16;
+        FT_Set_Pixel_Sizes(face, 0, font_size);
 
         unsigned int roww = 0;
         unsigned int rowh = 0;
@@ -168,6 +181,9 @@ namespace cgull {
             charcode = FT_Get_Next_Char(face, charcode, &gindex);
         }
 
+        face_height = face->size->metrics.height >> 6; // new line distance
+        text_cursor.height = 2 * face_height - static_cast<float>(font_size); 
+
         FT_Done_Face(face);
         FT_Done_FreeType(ft);
     }
@@ -177,54 +193,88 @@ namespace cgull {
         ubo_window_size = window_size;
     }
 
-    std::vector<float> renderer::generate_batched_vertices(const std::string& text) {
+    std::vector<float> renderer::generate_batched_vertices(const text& text_content) {
         std::vector<float> vertices;
 
         const float scale = 1.0f;
 
-        float x = 50.0f;
-        float y = 50.0f;
+        float y = 600.0f;
 
-        for (char c : text) {
-            const auto& glyph = glyph_map[static_cast<key_code>(c)];
+        for (unsigned int r = 0; r < text_content.size(); r++) {
+            float x = 20.0f;
+            for (unsigned int c = 0; c < text_content[r].size(); c++) {
+                const auto& glyph = glyph_map[text_content[r][c]];
 
-            const float xpos = x + glyph.bl * scale;
-            const float ypos = y - (glyph.bh - glyph.bt) * scale;
+                const float xpos = x + glyph.bl * scale;
+                const float ypos = y - (glyph.bh - glyph.bt) * scale;
 
-            const float w = glyph.bw * scale;
-            const float h = glyph.bh * scale;
+                const float w = glyph.bw * scale;
+                const float h = glyph.bh * scale;
 
-            const float tw = glyph.bw / static_cast<float>(font_atlas_width);
-            const float th = glyph.bh / static_cast<float>(font_atlas_height);
+                if (r == text_buffer->cursor.row && c == text_buffer->cursor.col - 1) {
+                    text_cursor.pos_x = xpos + (glyph.ax * scale) - (glyph.bl * scale);
+                }
 
-            vertices.insert(vertices.end(), {
-                xpos + w, ypos + h, glyph.tx + tw, glyph.ty,
-                xpos,     ypos + h, glyph.tx,      glyph.ty,
-                xpos,     ypos,     glyph.tx,      glyph.ty + th,
-                xpos,     ypos,     glyph.tx,      glyph.ty + th,
-                xpos + w, ypos,     glyph.tx + tw, glyph.ty + th,
-                xpos + w, ypos + h, glyph.tx + tw, glyph.ty
-            });
-            x += glyph.ax * scale;
-            y += glyph.ay * scale;
+                const float tw = glyph.bw / static_cast<float>(font_atlas_width);
+                const float th = glyph.bh / static_cast<float>(font_atlas_height);
+
+                vertices.insert(vertices.end(), {
+                    xpos + w, ypos + h, glyph.tx + tw, glyph.ty,
+                    xpos,     ypos + h, glyph.tx,      glyph.ty,
+                    xpos,     ypos,     glyph.tx,      glyph.ty + th,
+                    xpos,     ypos,     glyph.tx,      glyph.ty + th,
+                    xpos + w, ypos,     glyph.tx + tw, glyph.ty + th,
+                    xpos + w, ypos + h, glyph.tx + tw, glyph.ty
+                });
+
+                x += glyph.ax * scale;
+                y += glyph.ay * scale;
+            }
+            y -= face_height;
         }
 
         return vertices;
     }
 
     void renderer::draw_text() {
-        glBindTexture(GL_TEXTURE_2D, text_texture);
-        glBindVertexArray(text_vao);
-        glUseProgram(text_shader);
-        std::string s = "hello world";
-        const auto vertices = generate_batched_vertices(s);
+        const auto vertices = generate_batched_vertices(text_buffer->content);
 
+        if (vertices.size() <= 0) return;
+
+        glBindVertexArray(text_vao);
+        glBindTexture(GL_TEXTURE_2D, text_texture);
+        glUseProgram(text_shader);
         glBindBuffer(GL_ARRAY_BUFFER, text_vbo);
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
         
-        float c[] = { 1.0, 1.0, 1.0 };
+        float c[] = { 1.0f, 1.0f, 1.0f };
         glUniform3fv(glGetUniformLocation(text_shader, "color"), 1, &c[0]);
-        glDrawArrays(GL_TRIANGLES, 0, 6 * s.size());
+        glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 4); // 4 components per vertex
+    }
+
+    void renderer::draw_cursor() {
+        float xpos = 20.0f;
+        float ypos = 592.0f - (face_height * text_buffer->cursor.row);
+        if (text_buffer->cursor.col != 0) {
+            xpos = text_cursor.pos_x;
+        }
+
+        const std::vector<float> vertices = {
+            xpos + 2.0f, ypos + text_cursor.height,
+            xpos,        ypos + text_cursor.height,
+            xpos,        ypos,
+            xpos,        ypos,
+            xpos + 2.0f, ypos,
+            xpos + 2.0f, ypos + text_cursor.height,
+        };
+        glBindVertexArray(text_cursor.vao);
+        glUseProgram(text_cursor.shader);
+        glBindBuffer(GL_ARRAY_BUFFER, text_cursor.vbo);
+        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+
+        float c[] = { 1.0f, 1.0f, 1.0f };
+        glUniform3fv(glGetUniformLocation(text_cursor.shader, "color"), 1, &c[0]);
+        glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 2); // 2 components per vertex
     }
 
     void render_loop(renderer* r, GLFWwindow* glfw_window) {
