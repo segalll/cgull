@@ -32,7 +32,8 @@ namespace cgull {
         buffer();
         void enter_char(char32_t new_char);
         void new_line();
-        void tab();
+        void indent();
+        bool unindent();
         void backspace();
         void cursor_left();
         void cursor_right();

@@ -82,6 +82,7 @@ namespace cgull {
         }
 
         FT_Face face;
+        // TimesNewRoman.ttf
         if (FT_New_Face(ft, "res/fonts/RobotoMono-Regular.ttf", 0, &face)) {
             throw std::runtime_error("failed to load font");
         }

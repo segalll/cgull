@@ -28,7 +28,8 @@ namespace cgull {
             } else if (std::holds_alternative<special_key_action>(a)) {
                 const auto ska = std::get<special_key_action>(a);
                 if (ska.key == 257) { buf.new_line(); }
-                else if (ska.key == 258) { buf.tab(); }
+                else if (ska.mods & static_cast<unsigned int>(key_mods::shift) && ska.key == 258) { buf.unindent(); }
+                else if (ska.key == 258) { buf.indent(); }
                 else if (ska.key == 259) { buf.backspace(); }
                 else if (ska.key == 263) { buf.cursor_left(); }
                 else if (ska.key == 262) { buf.cursor_right(); }
