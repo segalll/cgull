@@ -21,12 +21,13 @@ namespace cgull {
 	}
 
 	void buffer::enter_char(char32_t new_char) {
-		content.back() += new_char;
+		content[cursor.row].insert(content[cursor.row].begin() + cursor.col, new_char);
 		cursor.col += 1;
 	}
 
 	void buffer::new_line() {
-		content.push_back(line());
+		content.insert(content.begin() + cursor.row + 1, content[cursor.row].substr(cursor.col));
+		content[cursor.row].erase(content[cursor.row].begin() + cursor.col, content[cursor.row].end());
 		cursor.row += 1;
 		cursor.col = 0;
 	}
