@@ -4,9 +4,10 @@
 
 #include <vector>
 #include <optional>
+#include <fstream>
 
 namespace cgull {
-    using line = std::vector<unsigned int>;
+    using line = std::u32string;
     using text = std::vector<line>;
 
     struct snapshot {
@@ -14,8 +15,13 @@ namespace cgull {
         coord cursor;
     };
 
+    struct file {
+        std::fstream stream;
+        std::string name;
+    };
+
     struct buffer {
-        // file from;
+        file from;
         text content;
         coord cursor;
         coord scroll;
@@ -24,8 +30,14 @@ namespace cgull {
         std::optional<std::size_t> history_pos;
 
         buffer();
-        void backspace();
-        void enter_char(unsigned int new_char);
+        void enter_char(char32_t new_char);
         void new_line();
+        void tab();
+        void backspace();
+        void cursor_left();
+        void cursor_right();
+        void cursor_up();
+        void cursor_down();
+        void save();
     };
 }

@@ -198,7 +198,7 @@ namespace cgull {
 
         const float scale = 1.0f;
 
-        float y = 600.0f;
+        float y = 620.0f;
 
         for (unsigned int r = 0; r < text_content.size(); r++) {
             float x = 20.0f;
@@ -254,7 +254,7 @@ namespace cgull {
 
     void renderer::draw_cursor() {
         float xpos = 20.0f;
-        float ypos = 592.0f - (face_height * text_buffer->cursor.row);
+        float ypos = 612.0f - (face_height * text_buffer->cursor.row);
         if (text_buffer->cursor.col != 0) {
             xpos = text_cursor.pos_x;
         }
