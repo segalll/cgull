@@ -15,13 +15,7 @@ namespace cgull {
         coord cursor;
     };
 
-    struct file {
-        std::fstream stream;
-        std::string name;
-    };
-
     struct buffer {
-        file from;
         text content;
         coord cursor;
         coord scroll;

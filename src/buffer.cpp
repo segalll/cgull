@@ -17,14 +17,15 @@ namespace cgull {
     buffer::buffer() {
         content = {};
 
-        from.stream.open("A.java");
+        std::ifstream f;
+        f.open("A.java");
 
         std::string line;
-        while (std::getline(from.stream, line)) {
+        while (std::getline(f, line)) {
             content.push_back(utf8::utf8to32(line));
         }
 
-        from.stream.close();
+        f.close();
     }
 
     void buffer::enter_char(char32_t new_char) {
@@ -110,13 +111,14 @@ namespace cgull {
     }
 
     void buffer::save() {
-        from.stream.open("A.java");
+        std::ofstream f;
+        f.open("A.java");
         std::string out;
         for (const line& l : content) {
             out += utf8::utf32to8(l) + "\n";
         }
-        from.stream << out;
+        f << out;
 
-        from.stream.close();
+        f.close();
     }
 }
