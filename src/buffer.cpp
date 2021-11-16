@@ -19,6 +19,10 @@ namespace cgull {
         }
 
         f.close();
+
+        if (content.empty()) {
+            content.push_back({});
+        }
     }
 
     void buffer::enter_char(char32_t new_char) {
