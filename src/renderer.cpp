@@ -197,7 +197,7 @@ namespace cgull {
     std::vector<float> renderer::generate_batched_vertices(const text& text_content) {
         std::vector<float> vertices;
 
-        float y = 28.0f;
+        float y = face_height;
 
         for (unsigned int r = 0; r < text_content.size(); r++) {
             float x = 20.0f;
@@ -253,7 +253,7 @@ namespace cgull {
 
     void renderer::draw_cursor() {
         float xpos = 20.0f;
-        float ypos = 11.0f + (face_height * text_buffer->cursor.row);
+        float ypos = text_cursor.height + (face_height * text_buffer->cursor.row) - face_height - 1.0f; // just works
         if (text_buffer->cursor.col != 0) {
             xpos = text_cursor.pos_x;
         }
