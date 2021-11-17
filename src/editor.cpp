@@ -2,6 +2,7 @@
 
 #include <variant>
 #include <iostream>
+#include <memory>
 
 namespace {
     std::string exec(const char* cmd) {
