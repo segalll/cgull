@@ -21,6 +21,7 @@ namespace cgull {
             throw std::runtime_error("failed to initialize OpenGL context\n");
         }
 
+        font_size = 16; // initial font size
         load_glyphs();
 
         text_shader = create_shader("res/shaders/text.vert", "res/shaders/text.frag");
@@ -81,11 +82,12 @@ namespace cgull {
             throw std::runtime_error("failed to load font");
         }
 
-        font_size = 16;
         FT_Set_Pixel_Sizes(face, 0, font_size);
 
         unsigned int roww = 0;
         unsigned int rowh = 0;
+        font_atlas_width = 0;
+        font_atlas_height = 0;
 
         unsigned int gindex;
         unsigned int charcode = FT_Get_First_Char(face, &gindex);
@@ -111,8 +113,15 @@ namespace cgull {
         font_atlas_width = std::max(font_atlas_width, roww);
         font_atlas_height += rowh;
 
-        glGenTextures(1, &text_texture);
-        glBindTexture(GL_TEXTURE_2D, text_texture);
+        if (font_size != 20) {
+            glDeleteTextures(1, &text_texture);
+            glGenTextures(1, &text_texture);
+            glBindTexture(GL_TEXTURE_2D, text_texture);
+        } else {
+            glDeleteTextures(1, &alternate_text_texture);
+            glGenTextures(1, &alternate_text_texture);
+            glBindTexture(GL_TEXTURE_2D, alternate_text_texture);
+        }
         glTexImage2D(
             GL_TEXTURE_2D,
             0,
@@ -133,6 +142,8 @@ namespace cgull {
         int x = 0;
         int y = 0;
         rowh = 0;
+
+        glyph_map.clear();
 
         charcode = FT_Get_First_Char(face, &gindex);
         while (gindex != 0) {
@@ -235,13 +246,22 @@ namespace cgull {
         return vertices;
     }
 
+    void renderer::increment_font_size(int delta) {
+        font_size += delta;
+        load_glyphs();
+    }
+
     void renderer::draw_text() {
         const auto vertices = generate_batched_vertices(text_buffer->content);
 
         if (vertices.size() <= 0) return;
 
         glBindVertexArray(text_vao);
-        glBindTexture(GL_TEXTURE_2D, text_texture);
+        if (font_size == 20) {
+            glBindTexture(GL_TEXTURE_2D, alternate_text_texture);
+        } else {
+            glBindTexture(GL_TEXTURE_2D, text_texture);
+        }
         glUseProgram(text_shader);
         glBindBuffer(GL_ARRAY_BUFFER, text_vbo);
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);

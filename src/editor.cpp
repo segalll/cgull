@@ -20,7 +20,7 @@ namespace {
 }
 
 namespace cgull {
-    editor::editor(coord w_size, key_map km) : window_size(w_size), keys(km) {}
+    editor::editor(coord w_size, key_map km) : window_size(w_size){}//, keys(km) {}
 
     void editor::update(std::vector<action> actions) {
         for (const auto& a : actions) {
@@ -38,6 +38,7 @@ namespace cgull {
                 else if (ska.key == 264) { buf.cursor_down(); }
                 else if (ska.mods & static_cast<unsigned int>(key_mods::super) && ska.key == 83) { buf.save(); }
                 else if (ska.mods & static_cast<unsigned int>(key_mods::super) && ska.key == 82) { compile(); }
+                else if (ska.mods & static_cast<unsigned int>(key_mods::super) && ska.key == 61) { renderer_ptr->increment_font_size(4); }
             } else if (std::holds_alternative<resize_action>(a)) {
                 const auto ra = std::get<resize_action>(a);
                 window_size = ra.size;

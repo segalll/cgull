@@ -17,6 +17,7 @@ int main() {
     cgull::renderer r(w.get_size(), &e.buf);
 
     w.renderer_ptr = &r;
+    e.renderer_ptr = &r;
 
     r.render();
 

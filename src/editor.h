@@ -1,5 +1,6 @@
 #pragma once
 
+#include "renderer.h"
 #include "coord.h"
 #include "buffer.h"
 #include "inputs.h"
@@ -19,8 +20,9 @@ namespace cgull {
 
     struct editor {
         coord window_size;
-        key_map keys;
+        renderer* renderer_ptr;
         buffer buf;
+        //key_map keys; // cannot have two variable sized containers in struct
 
         editor(coord w_size, key_map km);
         void update(std::vector<action> actions);
