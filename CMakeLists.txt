@@ -21,7 +21,7 @@ find_package(Freetype REQUIRED)
 find_package(glfw3 3.3 REQUIRED)
 
 target_include_directories(cgull PRIVATE ${FREETYPE_INCLUDE_DIRS} ${JNI_INCLUDE_DIRS})
-target_link_libraries(cgull PRIVATE glfw ${FREETYPE_LIBRARIES} glad utfcpp)
+target_link_libraries(cgull PRIVATE glfw ${FREETYPE_LIBRARIES} glad nfd utfcpp)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
