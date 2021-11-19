@@ -30,7 +30,6 @@ namespace cgull {
 
         buffer* text_buffer;
         unsigned int text_vao, text_vbo, text_texture, text_shader;
-        unsigned int alternate_text_texture;
         unsigned int proj_ubo;
         unsigned int font_atlas_width, font_atlas_height = 0;
         coord window_size;
@@ -38,13 +37,14 @@ namespace cgull {
         bool should_redraw;
         float face_height;
         unsigned int font_size;
+        unsigned int desired_font_size;
         cursor text_cursor;
         std::unordered_map<key_code, glyph_info> glyph_map;
 
         void render();
         void load_glyphs();
         std::vector<float> generate_batched_vertices(const text& text_content);
-        void increment_font_size(int delta);
+        void update_font_size();
         void draw_text();
         void draw_cursor();
         void update_projection();

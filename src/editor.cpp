@@ -36,9 +36,10 @@ namespace cgull {
                 else if (ska.key == 262) { buf.cursor_right(); }
                 else if (ska.key == 265) { buf.cursor_up(); }
                 else if (ska.key == 264) { buf.cursor_down(); }
-                else if (ska.mods & static_cast<unsigned int>(key_mods::super) && ska.key == 83) { buf.save(); }
-                else if (ska.mods & static_cast<unsigned int>(key_mods::super) && ska.key == 82) { compile(); }
-                else if (ska.mods & static_cast<unsigned int>(key_mods::super) && ska.key == 61) { renderer_ptr->increment_font_size(4); }
+                else if (ska.mods & static_cast<unsigned int>(key_mods::ctrl) && ska.key == 83) { buf.save(); }
+                else if (ska.mods & static_cast<unsigned int>(key_mods::ctrl) && ska.key == 82) { compile(); }
+                else if (ska.mods & static_cast<unsigned int>(key_mods::ctrl) && ska.key == 61) { renderer_ptr->desired_font_size += 2; }
+                else if (ska.mods & static_cast<unsigned int>(key_mods::ctrl) && ska.key == 45) { renderer_ptr->desired_font_size -= 2; }
             } else if (std::holds_alternative<resize_action>(a)) {
                 const auto ra = std::get<resize_action>(a);
                 window_size = ra.size;
@@ -47,6 +48,7 @@ namespace cgull {
     }
 
     void editor::compile() {
-        std::cout << exec("java A.java") << "\n";
+        std::cout << exec("javac A.java") << "\n";
+        std::cout << exec("java A") << "\n";
     }
 }

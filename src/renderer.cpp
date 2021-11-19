@@ -2,6 +2,7 @@
 
 #include "shader.h"
 
+#include <GLFW/glfw3.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include <glm/glm.hpp>
@@ -21,7 +22,10 @@ namespace cgull {
             throw std::runtime_error("failed to initialize OpenGL context\n");
         }
 
+        glGenTextures(1, &text_texture);
+
         font_size = 16; // initial font size
+        desired_font_size = 16;
         load_glyphs();
 
         text_shader = create_shader("res/shaders/text.vert", "res/shaders/text.frag");
@@ -66,6 +70,9 @@ namespace cgull {
 
         if (ubo_window_size != window_size) {
             update_projection();
+        }
+        if (desired_font_size != font_size) {
+            update_font_size();
         }
         draw_text();
         draw_cursor();
@@ -113,15 +120,7 @@ namespace cgull {
         font_atlas_width = std::max(font_atlas_width, roww);
         font_atlas_height += rowh;
 
-        if (font_size != 20) {
-            glDeleteTextures(1, &text_texture);
-            glGenTextures(1, &text_texture);
-            glBindTexture(GL_TEXTURE_2D, text_texture);
-        } else {
-            glDeleteTextures(1, &alternate_text_texture);
-            glGenTextures(1, &alternate_text_texture);
-            glBindTexture(GL_TEXTURE_2D, alternate_text_texture);
-        }
+        glBindTexture(GL_TEXTURE_2D, text_texture);
         glTexImage2D(
             GL_TEXTURE_2D,
             0,
@@ -246,8 +245,8 @@ namespace cgull {
         return vertices;
     }
 
-    void renderer::increment_font_size(int delta) {
-        font_size += delta;
+    void renderer::update_font_size() {
+        font_size = desired_font_size;
         load_glyphs();
     }
 
@@ -257,11 +256,7 @@ namespace cgull {
         if (vertices.size() <= 0) return;
 
         glBindVertexArray(text_vao);
-        if (font_size == 20) {
-            glBindTexture(GL_TEXTURE_2D, alternate_text_texture);
-        } else {
-            glBindTexture(GL_TEXTURE_2D, text_texture);
-        }
+        glBindTexture(GL_TEXTURE_2D, text_texture);
         glUseProgram(text_shader);
         glBindBuffer(GL_ARRAY_BUFFER, text_vbo);
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
