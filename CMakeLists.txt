@@ -13,7 +13,7 @@ set(CMAKE_OSX_DEPLOYMENT_TARGET "12.0")
 
 add_subdirectory(deps)
 
-add_executable(cgull src/main.cpp src/window.cpp src/editor.cpp src/renderer.cpp src/shader.cpp src/buffer.cpp)
+add_executable(cgull src/main.cpp src/window.cpp src/editor.cpp src/renderer.cpp src/shader.cpp src/buffer.cpp src/inputs.cpp)
 
 set_property(TARGET cgull PROPERTY CXX_STANDARD 20)
 

@@ -11,9 +11,24 @@
 
 int main() {
     cgull::window w;
+
+    namespace key = cgull::key;
+    using key_mods = cgull::key_mods;
     cgull::editor e(w.get_size(), {
-        {{'p'}, "move-up"}
+        {key::seq(key::enter), "new-line"},
+        {key::seq({key_mods::shift}, key::tab), "unindent"},
+        {key::seq(key::tab), "indent"},
+        {key::seq(key::backspace), "backspace"},
+        {key::seq(key::left), "cursor-left"},
+        {key::seq(key::right), "cursor-right"},
+        {key::seq(key::up), "cursor-up"},
+        {key::seq(key::down), "cursor-down"},
+        {key::seq({key_mods::platform}, 's'), "save"},
+        {key::seq({key_mods::platform}, 'r'), "compile"},
+        {key::seq({key_mods::platform}, key::equal), "zoom-in"},
+        {key::seq({key_mods::platform}, key::minus), "zoom-out"}
     });
+
     cgull::renderer r(w.get_size(), &e.buf);
 
     w.renderer_ptr = &r;

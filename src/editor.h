@@ -22,7 +22,7 @@ namespace cgull {
         coord window_size;
         renderer* renderer_ptr;
         buffer buf;
-        //key_map keys; // cannot have two variable sized containers in struct
+        key_map keys;
 
         editor(coord w_size, key_map km);
         void update(std::vector<action> actions);
