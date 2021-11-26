@@ -22,8 +22,10 @@ namespace cgull {
         std::optional<coord> selection_start;
         std::vector<snapshot> history;
         std::optional<std::size_t> history_pos;
+        std::optional<std::string> file_path;
 
         buffer();
+        buffer(const std::string& filepath);
         void enter_char(char32_t new_char);
         void new_line();
         void indent();

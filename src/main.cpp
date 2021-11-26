@@ -26,7 +26,8 @@ int main() {
         {key::seq({key_mods::platform}, 's'), "save"},
         {key::seq({key_mods::platform}, 'r'), "compile"},
         {key::seq({key_mods::platform}, key::equal), "zoom-in"},
-        {key::seq({key_mods::platform}, key::minus), "zoom-out"}
+        {key::seq({key_mods::platform}, key::minus), "zoom-out"},
+        {key::seq({key_mods::platform}, 'o'), "open"}
     });
 
     cgull::renderer r(w.get_size(), &e.buf);

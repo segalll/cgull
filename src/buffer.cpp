@@ -8,10 +8,14 @@
 
 namespace cgull {
     buffer::buffer() {
+        content = {{}};
+    }
+
+    buffer::buffer(const std::string& filepath) : file_path(filepath) {
         content = {};
 
         std::ifstream f;
-        f.open("A.java");
+        f.open(filepath);
 
         std::string line;
         while (std::getline(f, line)) {
@@ -109,7 +113,7 @@ namespace cgull {
 
     void buffer::save() {
         std::ofstream f;
-        f.open("A.java");
+        f.open(file_path.value());
         std::string out;
         for (const line& l : content) {
             out += utf8::utf32to8(l) + "\n";

@@ -27,5 +27,6 @@ namespace cgull {
         editor(coord w_size, key_map km);
         void update(std::vector<action> actions);
         void compile();
+        void open();
     };
 }
