@@ -59,6 +59,9 @@ namespace cgull {
     }
 
     void editor::compile() {
+        if (buf.file_path == std::nullopt) {
+            buf.save();
+        }
         std::string path = "";
         int start = 0;
         int end = buf.file_path.value().find("/");

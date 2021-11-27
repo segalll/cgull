@@ -1,6 +1,7 @@
 #include "buffer.h"
 
 #include "utf8.h"
+#include "nfd.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -48,6 +49,7 @@ namespace cgull {
 
     bool buffer::unindent() {
         int indent_pos = content[cursor.row].find_first_not_of(U' ', cursor.col);
+        indent_pos = indent_pos == -1 ? content[cursor.row].size() : indent_pos;
         if (indent_pos >= 4 && content[cursor.row].substr(indent_pos - 4, 4) == U"    ") {
             content[cursor.row].erase(indent_pos - 4, 4);
             cursor.col = cursor.col < 4 ? 0 : cursor.col - 4;
@@ -113,6 +115,15 @@ namespace cgull {
 
     void buffer::save() {
         std::ofstream f;
+        if (file_path == std::nullopt) {
+            NFD::Guard nfdGuard;
+            NFD::UniquePath outPath;
+            nfdresult_t result = NFD::SaveDialog(outPath, nullptr, 0);
+            if (result != NFD_OKAY) {
+                return;
+            }
+            file_path = outPath.get();
+        }
         f.open(file_path.value());
         std::string out;
         for (const line& l : content) {
