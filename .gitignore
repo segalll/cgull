@@ -24,3 +24,7 @@ bin
 # Java files
 *.java
 *.class
+
+# Clangd
+.clang-format
+.clangd
