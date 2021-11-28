@@ -13,22 +13,19 @@ void check_compile_errors(unsigned int shader, const std::string& type) {
         glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
         if (!success) {
             glGetShaderInfoLog(shader, 1024, nullptr, infoLog);
-            std::cout << "Shader failed to compile (type: " << type << ")\n"
-                      << infoLog << "\n\n";
+            std::cout << "Shader failed to compile (type: " << type << ")\n" << infoLog << "\n\n";
         }
     } else {
         glGetProgramiv(shader, GL_LINK_STATUS, &success);
         if (!success) {
             glGetProgramInfoLog(shader, 1024, nullptr, infoLog);
-            std::cout << "Program failed to link (type: " << type << ")\n"
-                      << infoLog << "\n\n";
+            std::cout << "Program failed to link (type: " << type << ")\n" << infoLog << "\n\n";
         }
     }
 }
 
 namespace cgull {
-unsigned int create_shader(const std::string& vertex_path,
-                           const std::string& fragment_path) {
+unsigned int create_shader(const std::string& vertex_path, const std::string& fragment_path) {
     std::string vertex_code, fragment_code;
     std::ifstream v_shader_file, f_shader_file;
 

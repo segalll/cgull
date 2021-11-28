@@ -28,10 +28,8 @@ renderer::renderer(coord w_size, buffer* buf) : text_buffer(buf) {
     desired_font_size = 16;
     load_glyphs();
 
-    text_shader =
-        create_shader("res/shaders/text.vert", "res/shaders/text.frag");
-    text_cursor.shader =
-        create_shader("res/shaders/cursor.vert", "res/shaders/cursor.frag");
+    text_shader = create_shader("res/shaders/text.vert", "res/shaders/text.frag");
+    text_cursor.shader = create_shader("res/shaders/cursor.vert", "res/shaders/cursor.frag");
 
     glGenVertexArrays(1, &text_vao);
     glGenBuffers(1, &text_vbo);
@@ -41,8 +39,7 @@ renderer::renderer(coord w_size, buffer* buf) : text_buffer(buf) {
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
-                          (void*)(2 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 
     glGenVertexArrays(1, &text_cursor.vao);
     glGenBuffers(1, &text_cursor.vbo);
@@ -54,11 +51,8 @@ renderer::renderer(coord w_size, buffer* buf) : text_buffer(buf) {
 
     glGenBuffers(1, &proj_ubo);
     glBindBuffer(GL_UNIFORM_BUFFER, proj_ubo);
-    glUniformBlockBinding(text_shader,
-                          glGetUniformLocation(text_shader, "matrices"), 0);
-    glUniformBlockBinding(text_cursor.shader,
-                          glGetUniformLocation(text_cursor.shader, "matrices"),
-                          0);
+    glUniformBlockBinding(text_shader, glGetUniformLocation(text_shader, "matrices"), 0);
+    glUniformBlockBinding(text_cursor.shader, glGetUniformLocation(text_cursor.shader, "matrices"), 0);
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, proj_ubo);
 
     update_projection();
@@ -127,8 +121,7 @@ void renderer::load_glyphs() {
     font_atlas_height += rowh;
 
     glBindTexture(GL_TEXTURE_2D, text_texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, font_atlas_width, font_atlas_height,
-                 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, font_atlas_width, font_atlas_height, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -154,21 +147,16 @@ void renderer::load_glyphs() {
             x = 0;
         }
 
-        glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, face->glyph->bitmap.width,
-                        face->glyph->bitmap.rows, GL_RED, GL_UNSIGNED_BYTE,
-                        face->glyph->bitmap.buffer);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, face->glyph->bitmap.width, face->glyph->bitmap.rows, GL_RED,
+                        GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer);
 
         glyph_map.emplace(
             charcode,
-            glyph_info{
-                static_cast<float>(face->glyph->advance.x >> 6),
-                static_cast<float>(face->glyph->advance.y >> 6),
-                static_cast<float>(face->glyph->bitmap.width),
-                static_cast<float>(face->glyph->bitmap.rows),
-                static_cast<float>(face->glyph->bitmap_left),
-                static_cast<float>(face->glyph->bitmap_top),
-                static_cast<float>(x) / static_cast<float>(font_atlas_width),
-                static_cast<float>(y) / static_cast<float>(font_atlas_height)});
+            glyph_info{static_cast<float>(face->glyph->advance.x >> 6), static_cast<float>(face->glyph->advance.y >> 6),
+                       static_cast<float>(face->glyph->bitmap.width), static_cast<float>(face->glyph->bitmap.rows),
+                       static_cast<float>(face->glyph->bitmap_left), static_cast<float>(face->glyph->bitmap_top),
+                       static_cast<float>(x) / static_cast<float>(font_atlas_width),
+                       static_cast<float>(y) / static_cast<float>(font_atlas_height)});
 
         rowh = std::max(rowh, face->glyph->bitmap.rows);
         x += face->glyph->bitmap.width + 1;
@@ -187,15 +175,12 @@ void renderer::update_projection() {
     ubo_window_size = window_size;
     glViewport(0, 0, ubo_window_size.col, ubo_window_size.row);
     const glm::mat4 m =
-        glm::ortho(0.0f, static_cast<float>(ubo_window_size.col),
-                   static_cast<float>(ubo_window_size.row), 0.0f);
+        glm::ortho(0.0f, static_cast<float>(ubo_window_size.col), static_cast<float>(ubo_window_size.row), 0.0f);
     glBindBuffer(GL_UNIFORM_BUFFER, proj_ubo);
-    glBufferData(GL_UNIFORM_BUFFER, sizeof(m), glm::value_ptr(m),
-                 GL_STATIC_DRAW);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(m), glm::value_ptr(m), GL_STATIC_DRAW);
 }
 
-std::vector<float>
-renderer::generate_batched_vertices(const text& text_content) {
+std::vector<float> renderer::generate_batched_vertices(const text& text_content) {
     std::vector<float> vertices;
 
     float y = face_height;
@@ -211,8 +196,7 @@ renderer::generate_batched_vertices(const text& text_content) {
             const float w = glyph.bw;
             const float h = glyph.bh;
 
-            if (r == text_buffer->cursor.row &&
-                c == text_buffer->cursor.col - 1) {
+            if (r == text_buffer->cursor.row && c == text_buffer->cursor.col - 1) {
                 text_cursor.pos_x = xpos + glyph.ax - glyph.bl;
             }
 
@@ -220,12 +204,10 @@ renderer::generate_batched_vertices(const text& text_content) {
             const float th = glyph.bh / static_cast<float>(font_atlas_height);
 
             vertices.insert(vertices.end(),
-                            {xpos + w, ypos,     glyph.tx + tw, glyph.ty,
-                             xpos,     ypos,     glyph.tx,      glyph.ty,
-                             xpos,     ypos + h, glyph.tx,      glyph.ty + th,
-                             xpos,     ypos + h, glyph.tx,      glyph.ty + th,
-                             xpos + w, ypos + h, glyph.tx + tw, glyph.ty + th,
-                             xpos + w, ypos,     glyph.tx + tw, glyph.ty});
+                            {xpos + w,      ypos,          glyph.tx + tw, glyph.ty,      xpos,          ypos,
+                             glyph.tx,      glyph.ty,      xpos,          ypos + h,      glyph.tx,      glyph.ty + th,
+                             xpos,          ypos + h,      glyph.tx,      glyph.ty + th, xpos + w,      ypos + h,
+                             glyph.tx + tw, glyph.ty + th, xpos + w,      ypos,          glyph.tx + tw, glyph.ty});
 
             x += glyph.ax;
             y += glyph.ay;
@@ -251,8 +233,7 @@ void renderer::draw_text() {
     glBindTexture(GL_TEXTURE_2D, text_texture);
     glUseProgram(text_shader);
     glBindBuffer(GL_ARRAY_BUFFER, text_vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float),
-                 vertices.data(), GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
 
     float c[] = {1.0f, 1.0f, 1.0f};
     glUniform3fv(glGetUniformLocation(text_shader, "color"), 1, &c[0]);
@@ -262,8 +243,7 @@ void renderer::draw_text() {
 
 void renderer::draw_cursor() {
     float xpos = 20.0f;
-    float ypos = text_cursor.height + (face_height * text_buffer->cursor.row) -
-                 face_height - 1.0f; // just works
+    float ypos = text_cursor.height + (face_height * text_buffer->cursor.row) - face_height - 1.0f; // just works
     if (text_buffer->cursor.col != 0) {
         xpos = text_cursor.pos_x;
     }
@@ -279,8 +259,7 @@ void renderer::draw_cursor() {
     glBindVertexArray(text_cursor.vao);
     glUseProgram(text_cursor.shader);
     glBindBuffer(GL_ARRAY_BUFFER, text_cursor.vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float),
-                 vertices.data(), GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
 
     float c[] = {1.0f, 1.0f, 1.0f};
     glUniform3fv(glGetUniformLocation(text_cursor.shader, "color"), 1, &c[0]);

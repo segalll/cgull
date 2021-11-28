@@ -17,8 +17,7 @@ window::window() {
 #endif
 
     auto mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-    glfw_window =
-        glfwCreateWindow(mode->width, mode->height, "CGull", nullptr, nullptr);
+    glfw_window = glfwCreateWindow(mode->width, mode->height, "CGull", nullptr, nullptr);
     if (!glfw_window) {
         glfwTerminate();
         throw std::runtime_error("failed to create window\n");
@@ -27,14 +26,12 @@ window::window() {
 
     glfwSetWindowUserPointer(glfw_window, this);
 
-    glfwSetCharCallback(
-        glfw_window, [](GLFWwindow* window, unsigned int codepoint) {
-            static_cast<struct window*>(glfwGetWindowUserPointer(window))
-                ->pending_actions.push_back(char_action{codepoint});
-        });
+    glfwSetCharCallback(glfw_window, [](GLFWwindow* window, unsigned int codepoint) {
+        static_cast<struct window*>(glfwGetWindowUserPointer(window))
+            ->pending_actions.push_back(char_action{codepoint});
+    });
 
-    glfwSetKeyCallback(glfw_window, [](GLFWwindow* window, int key,
-                                       int scancode, int action, int mods) {
+    glfwSetKeyCallback(glfw_window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
         if (action != GLFW_RELEASE) {
             unsigned int km = static_cast<unsigned int>(key_mods::none);
             if (mods & GLFW_MOD_SHIFT)
@@ -51,37 +48,30 @@ window::window() {
                 km |= static_cast<unsigned int>(key_mods::num_lock);
 
             static_cast<struct window*>(glfwGetWindowUserPointer(window))
-                ->pending_actions.push_back(
-                    special_key_action{static_cast<key_code>(key), km});
+                ->pending_actions.push_back(special_key_action{static_cast<key_code>(key), km});
         }
     });
 
-    glfwSetMouseButtonCallback(
-        glfw_window, [](GLFWwindow* window, int button, int action, int mods) {
-            if (action != GLFW_RELEASE && (button == GLFW_MOUSE_BUTTON_LEFT ||
-                                           button == GLFW_MOUSE_BUTTON_RIGHT)) {
-                double xpos, ypos;
-                glfwGetCursorPos(window, &xpos, &ypos);
-                coord c = {static_cast<index>(ypos), static_cast<index>(xpos)};
-                mouse_button mb = button == GLFW_MOUSE_BUTTON_LEFT
-                                      ? mouse_button::left
-                                      : mouse_button::right;
-                static_cast<struct window*>(glfwGetWindowUserPointer(window))
-                    ->pending_actions.push_back(click_action{c, mb});
-            }
-        });
+    glfwSetMouseButtonCallback(glfw_window, [](GLFWwindow* window, int button, int action, int mods) {
+        if (action != GLFW_RELEASE && (button == GLFW_MOUSE_BUTTON_LEFT || button == GLFW_MOUSE_BUTTON_RIGHT)) {
+            double xpos, ypos;
+            glfwGetCursorPos(window, &xpos, &ypos);
+            coord c = {static_cast<index>(ypos), static_cast<index>(xpos)};
+            mouse_button mb = button == GLFW_MOUSE_BUTTON_LEFT ? mouse_button::left : mouse_button::right;
+            static_cast<struct window*>(glfwGetWindowUserPointer(window))
+                ->pending_actions.push_back(click_action{c, mb});
+        }
+    });
 
-    glfwSetFramebufferSizeCallback(
-        glfw_window, [](GLFWwindow* window, int width, int height) {
-            coord c = {static_cast<index>(height), static_cast<index>(width)};
+    glfwSetFramebufferSizeCallback(glfw_window, [](GLFWwindow* window, int width, int height) {
+        coord c = {static_cast<index>(height), static_cast<index>(width)};
 
-            struct window* window_ptr =
-                static_cast<struct window*>(glfwGetWindowUserPointer(window));
+        struct window* window_ptr = static_cast<struct window*>(glfwGetWindowUserPointer(window));
 
-            window_ptr->renderer_ptr->window_size = c;
-            window_ptr->renderer_ptr->should_redraw = true;
-            window_ptr->pending_actions.push_back(resize_action{c});
-        });
+        window_ptr->renderer_ptr->window_size = c;
+        window_ptr->renderer_ptr->should_redraw = true;
+        window_ptr->pending_actions.push_back(resize_action{c});
+    });
 }
 
 std::vector<action> window::update() {

@@ -8,13 +8,9 @@
 #include "utf8.h"
 
 namespace {
-bool is_bracket(char32_t character) {
-    return character == U'(' || character == U'{' || character == U'[';
-}
+bool is_bracket(char32_t character) { return character == U'(' || character == U'{' || character == U'['; }
 
-char32_t corresponding_bracket(char32_t bracket) {
-    return bracket == U'(' ? ')' : bracket + 2;
-}
+char32_t corresponding_bracket(char32_t bracket) { return bracket == U'(' ? ')' : bracket + 2; }
 } // namespace
 
 namespace cgull {
@@ -50,10 +46,8 @@ void buffer::enter_char(char32_t new_char) {
 }
 
 void buffer::new_line() {
-    content.insert(content.begin() + cursor.row + 1,
-                   content[cursor.row].substr(cursor.col));
-    content[cursor.row].erase(content[cursor.row].begin() + cursor.col,
-                              content[cursor.row].end());
+    content.insert(content.begin() + cursor.row + 1, content[cursor.row].substr(cursor.col));
+    content[cursor.row].erase(content[cursor.row].begin() + cursor.col, content[cursor.row].end());
     cursor.row += 1;
     cursor.col = 0;
 }
@@ -66,8 +60,7 @@ void buffer::indent() {
 bool buffer::unindent() {
     int indent_pos = content[cursor.row].find_first_not_of(U' ', cursor.col);
     indent_pos = indent_pos == -1 ? content[cursor.row].size() : indent_pos;
-    if (indent_pos >= 4 &&
-        content[cursor.row].substr(indent_pos - 4, 4) == U"    ") {
+    if (indent_pos >= 4 && content[cursor.row].substr(indent_pos - 4, 4) == U"    ") {
         content[cursor.row].erase(indent_pos - 4, 4);
         cursor.col = cursor.col < 4 ? 0 : cursor.col - 4;
         return true;
@@ -80,8 +73,7 @@ void buffer::backspace() {
         return;
     }
     if (cursor.col > 0 && is_bracket(content[cursor.row][cursor.col - 1]) &&
-        content[cursor.row][cursor.col] ==
-            corresponding_bracket(content[cursor.row][cursor.col - 1])) {
+        content[cursor.row][cursor.col] == corresponding_bracket(content[cursor.row][cursor.col - 1])) {
         cursor.col -= 1;
         content[cursor.row].erase(cursor.col, 2);
     } else if (cursor.col > 0) {
@@ -122,9 +114,7 @@ void buffer::cursor_up() {
         cursor.col = 0;
     } else {
         cursor.row -= 1;
-        cursor.col = content[cursor.row].size() < cursor.col
-                         ? content[cursor.row].size()
-                         : cursor.col;
+        cursor.col = content[cursor.row].size() < cursor.col ? content[cursor.row].size() : cursor.col;
     }
 }
 
@@ -133,9 +123,7 @@ void buffer::cursor_down() {
         cursor.col = content.back().size();
     } else {
         cursor.row += 1;
-        cursor.col = content[cursor.row].size() < cursor.col
-                         ? content[cursor.row].size()
-                         : cursor.col;
+        cursor.col = content[cursor.row].size() < cursor.col ? content[cursor.row].size() : cursor.col;
     }
 }
 

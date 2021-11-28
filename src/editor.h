@@ -23,8 +23,7 @@ struct resize_action {
     coord size;
 };
 
-using action =
-    std::variant<char_action, special_key_action, click_action, resize_action>;
+using action = std::variant<char_action, special_key_action, click_action, resize_action>;
 
 struct editor {
     coord window_size;

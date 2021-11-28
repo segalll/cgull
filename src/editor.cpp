@@ -10,8 +10,7 @@ namespace {
 std::string exec(const std::string& cmd) {
     std::array<char, 128> buffer;
     std::string result;
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"),
-                                                  pclose);
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"), pclose);
     if (!pipe) {
         throw std::runtime_error("popen() failed!");
     }
@@ -30,8 +29,7 @@ void editor::update(std::vector<action> actions) {
         if (std::holds_alternative<char_action>(a)) {
             buf.enter_char(std::get<char_action>(a).key);
         } else if (std::holds_alternative<special_key_action>(a)) {
-            key_combination kc{std::get<special_key_action>(a).key,
-                               std::get<special_key_action>(a).mods};
+            key_combination kc{std::get<special_key_action>(a).key, std::get<special_key_action>(a).mods};
             if (keys.find(kc) == keys.end()) {
                 continue;
             }
@@ -86,8 +84,7 @@ void editor::compile() {
     std::string filename = buf.file_path.value().substr(start, end - start);
 
     std::string compileResult = exec("javac " + buf.file_path.value());
-    std::string runResult = exec("java -cp " + path + " " +
-                                 filename.substr(0, filename.length() - 5));
+    std::string runResult = exec("java -cp " + path + " " + filename.substr(0, filename.length() - 5));
     std::cout << compileResult << "\n";
     std::cout << runResult << "\n";
 }

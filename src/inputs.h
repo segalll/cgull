@@ -44,9 +44,7 @@ struct key_combination {
         mods = m;
     }
 
-    bool operator==(const key_combination& other) const {
-        return key == other.key && mods == other.mods;
-    }
+    bool operator==(const key_combination& other) const { return key == other.key && mods == other.mods; }
 };
 
 struct key_combination_hasher {
@@ -54,8 +52,7 @@ struct key_combination_hasher {
         return std::hash<key_code>{}(V.key) ^ std::hash<unsigned int>{}(V.mods);
     }
 };
-using key_map =
-    std::unordered_map<key_combination, std::string, key_combination_hasher>;
+using key_map = std::unordered_map<key_combination, std::string, key_combination_hasher>;
 
 enum class mouse_button { left, right };
 
