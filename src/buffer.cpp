@@ -46,10 +46,19 @@ void buffer::enter_char(char32_t new_char) {
 }
 
 void buffer::new_line() {
-    content.insert(content.begin() + cursor.row + 1, content[cursor.row].substr(cursor.col));
-    content[cursor.row].erase(content[cursor.row].begin() + cursor.col, content[cursor.row].end());
-    cursor.row += 1;
-    cursor.col = 0;
+    if (cursor.col > 0 && content[cursor.row][cursor.col - 1] == U'{' &&
+        content[cursor.row][cursor.col] == U'}') {
+        content.insert(content.begin() + cursor.row + 1, content[cursor.row].substr(cursor.col));
+        content[cursor.row].erase(content[cursor.row].begin() + cursor.col, content[cursor.row].end());
+        content.insert(content.begin() + cursor.row + 1, U"    ");
+        cursor.row += 1;
+        cursor.col = 4;
+    } else {
+        content.insert(content.begin() + cursor.row + 1, content[cursor.row].substr(cursor.col));
+        content[cursor.row].erase(content[cursor.row].begin() + cursor.col, content[cursor.row].end());
+        cursor.row += 1;
+        cursor.col = 0;
+    }
 }
 
 void buffer::indent() {
