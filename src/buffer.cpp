@@ -10,6 +10,8 @@
 namespace {
 bool is_bracket(char32_t character) { return character == U'(' || character == U'{' || character == U'['; }
 
+bool is_closing_bracket(char32_t character) { return character == U')' || character == U'}' || character == U']'; }
+
 char32_t corresponding_bracket(char32_t bracket) { return bracket == U'(' ? ')' : bracket + 2; }
 } // namespace
 
@@ -38,6 +40,9 @@ void buffer::enter_char(char32_t new_char) {
     std::u32string insertion;
     if (is_bracket(new_char)) {
         insertion = {new_char, corresponding_bracket(new_char)};
+    } else if (is_closing_bracket(new_char) && content[cursor.row].size() > cursor.col &&
+               content[cursor.row][cursor.col] == new_char) {
+        insertion = {};
     } else {
         insertion = {new_char};
     }
@@ -46,19 +51,17 @@ void buffer::enter_char(char32_t new_char) {
 }
 
 void buffer::new_line() {
-    if (cursor.col > 0 && content[cursor.row][cursor.col - 1] == U'{' &&
-        content[cursor.row][cursor.col] == U'}') {
-        content.insert(content.begin() + cursor.row + 1, content[cursor.row].substr(cursor.col));
-        content[cursor.row].erase(content[cursor.row].begin() + cursor.col, content[cursor.row].end());
-        content.insert(content.begin() + cursor.row + 1, U"    ");
-        cursor.row += 1;
-        cursor.col = 4;
-    } else {
-        content.insert(content.begin() + cursor.row + 1, content[cursor.row].substr(cursor.col));
-        content[cursor.row].erase(content[cursor.row].begin() + cursor.col, content[cursor.row].end());
-        cursor.row += 1;
-        cursor.col = 0;
+    int indent_pos = content[cursor.row].find_first_not_of(U' ');
+    indent_pos = indent_pos == -1 ? content[cursor.row].size() : indent_pos;
+    std::u32string indent;
+    indent.insert(0, indent_pos, U' ');
+    content.insert(content.begin() + cursor.row + 1, indent + content[cursor.row].substr(cursor.col));
+    if (cursor.col > 0 && content[cursor.row][cursor.col - 1] == U'{' && content[cursor.row][cursor.col] == U'}') {
+        content.insert(content.begin() + cursor.row + 1, indent + U"    ");
     }
+    content[cursor.row].erase(content[cursor.row].begin() + cursor.col, content[cursor.row].end());
+    cursor.row += 1;
+    cursor.col = content[cursor.row].size();
 }
 
 void buffer::indent() {
