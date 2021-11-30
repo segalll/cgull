@@ -8,11 +8,23 @@
 #include "utf8.h"
 
 namespace {
+bool is_quote(char32_t character) { return character == U'"' || character == U'\''; }
+
 bool is_bracket(char32_t character) { return character == U'(' || character == U'{' || character == U'['; }
 
 bool is_closing_bracket(char32_t character) { return character == U')' || character == U'}' || character == U']'; }
 
 char32_t corresponding_bracket(char32_t bracket) { return bracket == U'(' ? ')' : bracket + 2; }
+
+bool is_container(char32_t character) {
+    return character == U'(' || character == U'{' || character == U'[' || character == U'"' || character == U'\'';
+}
+
+bool is_closing_container(char32_t character) { return is_quote(character) || is_closing_bracket(character); }
+
+char32_t corresponding_container(char32_t character) {
+    return is_quote(character) ? character : corresponding_bracket(character);
+}
 } // namespace
 
 namespace cgull {
@@ -38,11 +50,11 @@ buffer::buffer(const std::string& filepath) : file_path(filepath) {
 
 void buffer::enter_char(char32_t new_char) {
     std::u32string insertion;
-    if (is_bracket(new_char)) {
-        insertion = {new_char, corresponding_bracket(new_char)};
-    } else if (is_closing_bracket(new_char) && content[cursor.row].size() > cursor.col &&
-               content[cursor.row][cursor.col] == new_char) {
+    if (is_closing_container(new_char) && content[cursor.row].size() > cursor.col &&
+        content[cursor.row][cursor.col] == new_char) {
         insertion = {};
+    } else if (is_container(new_char)) {
+        insertion = {new_char, corresponding_container(new_char)};
     } else {
         insertion = {new_char};
     }
@@ -56,17 +68,24 @@ void buffer::new_line() {
     std::u32string indent;
     indent.insert(0, indent_pos, U' ');
     content.insert(content.begin() + cursor.row + 1, indent + content[cursor.row].substr(cursor.col));
-    if (cursor.col > 0 && content[cursor.row][cursor.col - 1] == U'{' && content[cursor.row][cursor.col] == U'}') {
-        content.insert(content.begin() + cursor.row + 1, indent + U"    ");
-    }
     content[cursor.row].erase(content[cursor.row].begin() + cursor.col, content[cursor.row].end());
+    if (cursor.col > 0 && content[cursor.row][cursor.col - 1] == U'{' && content[cursor.row + 1][indent_pos] == U'}') {
+        content.insert(content.begin() + cursor.row + 1, indent + U"    ");
+        cursor.col = content[cursor.row + 1].size();
+    } else {
+        cursor.col = indent_pos;
+    }
     cursor.row += 1;
-    cursor.col = content[cursor.row].size();
 }
 
 void buffer::indent() {
-    content[cursor.row].insert(cursor.col, U"    "); // 4 spaces
-    cursor.col += 4;
+    int indent_pos = content[cursor.row].find_first_not_of(U' ');
+    indent_pos = indent_pos == -1 ? content[cursor.row].size() : indent_pos;
+    std::u32string indent = U"";
+    int to_insert = indent_pos == 0 ? 4 : 4 - indent_pos % 4;
+    indent.insert(0, to_insert, U' ');
+    content[cursor.row].insert(cursor.col, indent);
+    cursor.col += to_insert;
 }
 
 bool buffer::unindent() {
@@ -84,13 +103,14 @@ void buffer::backspace() {
     if (unindent()) {
         return;
     }
-    if (cursor.col > 0 && is_bracket(content[cursor.row][cursor.col - 1]) &&
-        content[cursor.row][cursor.col] == corresponding_bracket(content[cursor.row][cursor.col - 1])) {
+    if (cursor.col > 0) {
         cursor.col -= 1;
-        content[cursor.row].erase(cursor.col, 2);
-    } else if (cursor.col > 0) {
-        cursor.col -= 1;
-        content[cursor.row].erase(content[cursor.row].begin() + cursor.col);
+        if (is_container(content[cursor.row][cursor.col]) &&
+            content[cursor.row][cursor.col + 1] == corresponding_container(content[cursor.row][cursor.col])) {
+            content[cursor.row].erase(cursor.col, 2);
+        } else {
+            content[cursor.row].erase(content[cursor.row].begin() + cursor.col);
+        }
     } else if (cursor.row > 0) {
         cursor.col = content[cursor.row - 1].size();
         content[cursor.row - 1] += content[cursor.row];
