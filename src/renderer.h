@@ -8,6 +8,7 @@
 #include <GLFW/glfw3.h>
 #include <glad/gl.h>
 
+#include <condition_variable>
 #include <unordered_map>
 
 namespace {
@@ -35,11 +36,12 @@ struct renderer {
     unsigned int font_atlas_width, font_atlas_height = 0;
     coord window_size;
     coord ubo_window_size;
-    bool should_redraw;
     float face_height;
     unsigned int font_size;
     unsigned int desired_font_size;
     cursor text_cursor;
+    std::mutex loop_mutex;
+    std::condition_variable loop_cv;
     std::unordered_map<key_code, glyph_info> glyph_map;
 
     void render();

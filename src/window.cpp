@@ -1,5 +1,6 @@
 #include "window.h"
 
+#include <GLFW/glfw3.h>
 #include <iostream>
 #include <stdexcept>
 
@@ -69,12 +70,14 @@ window::window() {
         struct window* window_ptr = static_cast<struct window*>(glfwGetWindowUserPointer(window));
 
         window_ptr->renderer_ptr->window_size = c;
-        window_ptr->renderer_ptr->should_redraw = true;
+        window_ptr->renderer_ptr->loop_cv.notify_one();
         window_ptr->pending_actions.push_back(resize_action{c});
     });
 }
 
 std::vector<action> window::update() {
+    std::cout << i << "\n";
+    i++;
     if (!pending_actions.empty()) {
         pending_actions.clear();
     }

@@ -3,6 +3,7 @@
 #include "shader.h"
 
 #include <GLFW/glfw3.h>
+#include <algorithm>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include <glm/glm.hpp>
@@ -237,6 +238,8 @@ void renderer::draw_text() {
 
     float c[] = {1.0f, 1.0f, 1.0f};
     glUniform3fv(glGetUniformLocation(text_shader, "color"), 1, &c[0]);
+    float s[] = {0.0f, 210.0f};
+    glUniform2fv(glGetUniformLocation(text_shader, "scroll"), 1, &s[0]);
     glDrawArrays(GL_TRIANGLES, 0,
                  vertices.size() / 4); // 4 components per vertex
 }
@@ -263,19 +266,22 @@ void renderer::draw_cursor() {
 
     float c[] = {1.0f, 1.0f, 1.0f};
     glUniform3fv(glGetUniformLocation(text_cursor.shader, "color"), 1, &c[0]);
+    float s[] = {0.0f, 210.0f};
+    glUniform2fv(glGetUniformLocation(text_cursor.shader, "scroll"), 1, &s[0]);
     glDrawArrays(GL_TRIANGLES, 0,
                  vertices.size() / 2); // 2 components per vertex
 }
 
 void render_loop(renderer* r, GLFWwindow* glfw_window) {
+    std::unique_lock<std::mutex> lk(r->loop_mutex);
+
     glfwMakeContextCurrent(glfw_window);
 
     while (!glfwWindowShouldClose(glfw_window)) {
-        if (r->should_redraw) {
-            r->render();
-            r->should_redraw = false;
-            glfwSwapBuffers(glfw_window);
-        }
+        std::cout << "render\n";
+        r->render();
+        glfwSwapBuffers(glfw_window);
+        r->loop_cv.wait(lk);
     }
 }
 } // namespace cgull

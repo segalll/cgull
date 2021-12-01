@@ -9,7 +9,9 @@ layout (std140) uniform matrices {
 
 out vec2 v_texcoord;
 
+uniform vec2 scroll;
+
 void main() {
     v_texcoord = a_texcoord;
-    gl_Position = proj * vec4(a_vertex, 0.0, 1.0);
+    gl_Position = proj * vec4(a_vertex.x + scroll.x, a_vertex.y - scroll.y, 0.0, 1.0);
 }

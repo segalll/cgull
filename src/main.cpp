@@ -46,9 +46,10 @@ int main() {
 
         if (!actions.empty()) {
             e.update(actions);
-            r.should_redraw = true;
+            r.loop_cv.notify_one();
         }
     }
+    r.loop_cv.notify_one();
 
     if (render_thread.joinable()) {
         render_thread.join();
