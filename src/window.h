@@ -17,6 +17,5 @@ struct window {
     GLFWwindow* glfw_window;
     renderer* renderer_ptr;
     std::vector<action> pending_actions;
-    int i = 0;
 };
 } // namespace cgull

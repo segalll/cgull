@@ -22,8 +22,12 @@ struct click_action {
 struct resize_action {
     coord size;
 };
+struct scroll_action {
+    float x_offset;
+    float y_offset;
+};
 
-using action = std::variant<char_action, special_key_action, click_action, resize_action>;
+using action = std::variant<char_action, special_key_action, click_action, resize_action, scroll_action>;
 
 struct editor {
     coord window_size;

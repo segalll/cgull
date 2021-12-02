@@ -28,11 +28,14 @@ void editor::update(std::vector<action> actions) {
     for (const auto& a : actions) {
         if (std::holds_alternative<char_action>(a)) {
             buf.enter_char(std::get<char_action>(a).key);
+            renderer_ptr->text_changed = true;
         } else if (std::holds_alternative<special_key_action>(a)) {
             key_combination kc{std::get<special_key_action>(a).key, std::get<special_key_action>(a).mods};
             if (keys.find(kc) == keys.end()) {
                 continue;
             }
+
+            renderer_ptr->text_changed = true;
 
             std::string command = keys[kc];
             if (command == "new-line") {
@@ -61,10 +64,15 @@ void editor::update(std::vector<action> actions) {
                 renderer_ptr->desired_font_size -= 2;
             } else if (command == "open") {
                 open();
+            } else {
+                renderer_ptr->text_changed = false;
             }
         } else if (std::holds_alternative<resize_action>(a)) {
             const auto ra = std::get<resize_action>(a);
             window_size = ra.size;
+        } else if (std::holds_alternative<scroll_action>(a)) {
+            const auto sa = std::get<scroll_action>(a);
+            renderer_ptr->scroll_pos_y -= sa.y_offset;
         }
     }
 }

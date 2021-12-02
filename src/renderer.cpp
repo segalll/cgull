@@ -182,7 +182,7 @@ void renderer::update_projection() {
 }
 
 std::vector<float> renderer::generate_batched_vertices(const text& text_content) {
-    std::vector<float> vertices;
+    std::vector<float> v;
 
     float y = face_height;
 
@@ -204,7 +204,7 @@ std::vector<float> renderer::generate_batched_vertices(const text& text_content)
             const float tw = glyph.bw / static_cast<float>(font_atlas_width);
             const float th = glyph.bh / static_cast<float>(font_atlas_height);
 
-            vertices.insert(vertices.end(),
+            v.insert(v.end(),
                             {xpos + w,      ypos,          glyph.tx + tw, glyph.ty,      xpos,          ypos,
                              glyph.tx,      glyph.ty,      xpos,          ypos + h,      glyph.tx,      glyph.ty + th,
                              xpos,          ypos + h,      glyph.tx,      glyph.ty + th, xpos + w,      ypos + h,
@@ -216,7 +216,7 @@ std::vector<float> renderer::generate_batched_vertices(const text& text_content)
         y += face_height;
     }
 
-    return vertices;
+    return v;
 }
 
 void renderer::update_font_size() {
@@ -225,7 +225,10 @@ void renderer::update_font_size() {
 }
 
 void renderer::draw_text() {
-    const auto vertices = generate_batched_vertices(text_buffer->content);
+    if (text_changed) {
+        vertices = generate_batched_vertices(text_buffer->content);
+        text_changed = false;
+    }
 
     if (vertices.size() <= 0)
         return;
@@ -238,7 +241,7 @@ void renderer::draw_text() {
 
     float c[] = {1.0f, 1.0f, 1.0f};
     glUniform3fv(glGetUniformLocation(text_shader, "color"), 1, &c[0]);
-    float s[] = {0.0f, 210.0f};
+    float s[] = {scroll_pos_x,scroll_pos_y};
     glUniform2fv(glGetUniformLocation(text_shader, "scroll"), 1, &s[0]);
     glDrawArrays(GL_TRIANGLES, 0,
                  vertices.size() / 4); // 4 components per vertex
@@ -266,7 +269,7 @@ void renderer::draw_cursor() {
 
     float c[] = {1.0f, 1.0f, 1.0f};
     glUniform3fv(glGetUniformLocation(text_cursor.shader, "color"), 1, &c[0]);
-    float s[] = {0.0f, 210.0f};
+    float s[] = {scroll_pos_x, scroll_pos_y};
     glUniform2fv(glGetUniformLocation(text_cursor.shader, "scroll"), 1, &s[0]);
     glDrawArrays(GL_TRIANGLES, 0,
                  vertices.size() / 2); // 2 components per vertex
@@ -278,7 +281,6 @@ void render_loop(renderer* r, GLFWwindow* glfw_window) {
     glfwMakeContextCurrent(glfw_window);
 
     while (!glfwWindowShouldClose(glfw_window)) {
-        std::cout << "render\n";
         r->render();
         glfwSwapBuffers(glfw_window);
         r->loop_cv.wait(lk);

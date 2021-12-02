@@ -73,11 +73,18 @@ window::window() {
         window_ptr->renderer_ptr->loop_cv.notify_one();
         window_ptr->pending_actions.push_back(resize_action{c});
     });
+
+    glfwSetScrollCallback(glfw_window, [](GLFWwindow* window, double x_offset, double y_offset) {
+        struct window* window_ptr = static_cast<struct window*>(glfwGetWindowUserPointer(window));
+
+        window_ptr->pending_actions.push_back(scroll_action{
+            static_cast<float>(x_offset) * 10.0f,
+            static_cast<float>(y_offset) * 10.0f
+        });
+    });
 }
 
 std::vector<action> window::update() {
-    std::cout << i << "\n";
-    i++;
     if (!pending_actions.empty()) {
         pending_actions.clear();
     }

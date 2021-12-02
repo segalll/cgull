@@ -40,6 +40,10 @@ struct renderer {
     unsigned int font_size;
     unsigned int desired_font_size;
     cursor text_cursor;
+    std::vector<float> vertices;
+    bool text_changed;
+    float scroll_pos_y;
+    float scroll_pos_x;
     std::mutex loop_mutex;
     std::condition_variable loop_cv;
     std::unordered_map<key_code, glyph_info> glyph_map;
