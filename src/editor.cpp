@@ -103,6 +103,7 @@ void editor::open() {
     nfdresult_t result = NFD::OpenDialog(outPath, nullptr, 0);
     if (result == NFD_OKAY) {
         buf = buffer(outPath.get());
+        renderer_ptr->scroll_pos_y = 0.0f;
     }
 }
 } // namespace cgull

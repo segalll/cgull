@@ -66,6 +66,14 @@ renderer::renderer(coord w_size, buffer* buf) : text_buffer(buf) {
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 }
 
+constexpr float renderer::max_scroll() {
+    const float visible_lines = (float)window_size.row / face_height;
+    if (text_buffer->content.size() < visible_lines) {
+        return 0.0f;
+    }
+    return (int)((float)text_buffer->content.size() - visible_lines) * face_height + 20.0f;
+}
+
 void renderer::render() {
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -75,6 +83,13 @@ void renderer::render() {
     if (desired_font_size != font_size) {
         update_font_size();
     }
+
+    if (scroll_pos_y < 0.0f) {
+        scroll_pos_y = 0.0f;
+    } else if (scroll_pos_y > max_scroll()) {
+        scroll_pos_y = max_scroll();
+    }
+
     draw_text();
     draw_cursor();
 }
@@ -241,7 +256,7 @@ void renderer::draw_text() {
 
     float c[] = {1.0f, 1.0f, 1.0f};
     glUniform3fv(glGetUniformLocation(text_shader, "color"), 1, &c[0]);
-    float s[] = {scroll_pos_x,scroll_pos_y};
+    float s[] = {scroll_pos_x, scroll_pos_y};
     glUniform2fv(glGetUniformLocation(text_shader, "scroll"), 1, &s[0]);
     glDrawArrays(GL_TRIANGLES, 0,
                  vertices.size() / 4); // 4 components per vertex

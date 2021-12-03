@@ -48,6 +48,7 @@ struct renderer {
     std::condition_variable loop_cv;
     std::unordered_map<key_code, glyph_info> glyph_map;
 
+    constexpr float max_scroll();
     void render();
     void load_glyphs();
     std::vector<float> generate_batched_vertices(const text& text_content);
