@@ -179,4 +179,13 @@ void buffer::save() {
 
     f.close();
 }
+
+void buffer::cursor_click(coord click) {
+    if (click.row < content.size() && click.col < content[click.row].size()) {
+        cursor = click;
+    } else {
+        cursor.row = content.size() - 1;
+        cursor.col = content.back().size();
+    }
+}
 } // namespace cgull

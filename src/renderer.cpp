@@ -11,6 +11,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <iostream>
+#include <numeric>
 #include <stdexcept>
 #include <tuple>
 
@@ -72,6 +73,27 @@ constexpr float renderer::max_scroll() {
         return 0.0f;
     }
     return (int)((float)text_buffer->content.size() - visible_lines) * face_height + 20.0f;
+}
+
+coord renderer::mouse_to_buffer(coord mouse_pos) {
+    coord c;
+    c.row = ((float)mouse_pos.row + scroll_pos_y - (face_height / 2)) / face_height;
+    c.col = 0;
+    int char_count = 0;
+    for (int i = 0; i < c.row; i++) {
+        char_count += text_buffer->content[i].size();
+    }
+    for (int i = 0; i < text_buffer->content[c.row].size(); i++) {
+        if (mouse_pos.col < vertices[(char_count + i) * 24 + 4] + (advances[char_count + i] / 2.0f) &&
+            mouse_pos.col >= vertices[(char_count + i - 1) * 24 + 4] - (advances[char_count + i - 1] / 2.0f)) {
+            c.col = i;
+            text_cursor.pos_x =
+                std::accumulate(advances.begin() + char_count, advances.begin() + char_count + i + 2, 0);
+            break;
+        }
+    }
+
+    return c;
 }
 
 void renderer::render() {
@@ -213,17 +235,17 @@ std::vector<float> renderer::generate_batched_vertices(const text& text_content)
             const float h = glyph.bh;
 
             if (r == text_buffer->cursor.row && c == text_buffer->cursor.col - 1) {
-                text_cursor.pos_x = xpos + glyph.ax - glyph.bl;
+                text_cursor.pos_x = x + glyph.ax;
             }
 
             const float tw = glyph.bw / static_cast<float>(font_atlas_width);
             const float th = glyph.bh / static_cast<float>(font_atlas_height);
 
-            v.insert(v.end(),
-                            {xpos + w,      ypos,          glyph.tx + tw, glyph.ty,      xpos,          ypos,
-                             glyph.tx,      glyph.ty,      xpos,          ypos + h,      glyph.tx,      glyph.ty + th,
-                             xpos,          ypos + h,      glyph.tx,      glyph.ty + th, xpos + w,      ypos + h,
-                             glyph.tx + tw, glyph.ty + th, xpos + w,      ypos,          glyph.tx + tw, glyph.ty});
+            v.insert(v.end(), {xpos + w,      ypos,          glyph.tx + tw, glyph.ty,      xpos,          ypos,
+                               glyph.tx,      glyph.ty,      xpos,          ypos + h,      glyph.tx,      glyph.ty + th,
+                               xpos,          ypos + h,      glyph.tx,      glyph.ty + th, xpos + w,      ypos + h,
+                               glyph.tx + tw, glyph.ty + th, xpos + w,      ypos,          glyph.tx + tw, glyph.ty});
+            advances.push_back(glyph.ax);
 
             x += glyph.ax;
             y += glyph.ay;

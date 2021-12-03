@@ -73,6 +73,11 @@ void editor::update(std::vector<action> actions) {
         } else if (std::holds_alternative<scroll_action>(a)) {
             const auto sa = std::get<scroll_action>(a);
             renderer_ptr->scroll_pos_y -= sa.y_offset;
+        } else if (std::holds_alternative<click_action>(a)) {
+            const auto ca = std::get<click_action>(a);
+            coord c = renderer_ptr->mouse_to_buffer(ca.click_coord);
+            buf.cursor_click(c);
+            std::cout << buf.cursor.row << " " << buf.cursor.col << "\n";
         }
     }
 }

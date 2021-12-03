@@ -41,6 +41,7 @@ struct renderer {
     unsigned int desired_font_size;
     cursor text_cursor;
     std::vector<float> vertices;
+    std::vector<float> advances;
     bool text_changed;
     float scroll_pos_y;
     float scroll_pos_x;
@@ -49,6 +50,7 @@ struct renderer {
     std::unordered_map<key_code, glyph_info> glyph_map;
 
     constexpr float max_scroll();
+    coord mouse_to_buffer(coord mouse_pos);
     void render();
     void load_glyphs();
     std::vector<float> generate_batched_vertices(const text& text_content);

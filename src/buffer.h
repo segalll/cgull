@@ -36,5 +36,6 @@ struct buffer {
     void cursor_up();
     void cursor_down();
     void save();
+    void cursor_click(coord click);
 };
 } // namespace cgull

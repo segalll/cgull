@@ -27,6 +27,9 @@ window::window() {
 
     glfwSetWindowUserPointer(glfw_window, this);
 
+    GLFWcursor* cursor = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);
+    glfwSetCursor(glfw_window, cursor);
+
     glfwSetCharCallback(glfw_window, [](GLFWwindow* window, unsigned int codepoint) {
         static_cast<struct window*>(glfwGetWindowUserPointer(window))
             ->pending_actions.push_back(char_action{codepoint});
