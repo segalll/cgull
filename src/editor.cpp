@@ -2,6 +2,7 @@
 
 #include "nfd.hpp"
 
+#include <array>
 #include <iostream>
 #include <memory>
 #include <variant>
@@ -77,7 +78,6 @@ void editor::update(std::vector<action> actions) {
             const auto ca = std::get<click_action>(a);
             coord c = renderer_ptr->mouse_to_buffer(ca.click_coord);
             buf.cursor_click(c);
-            std::cout << buf.cursor.row << " " << buf.cursor.col << "\n";
         }
     }
 }

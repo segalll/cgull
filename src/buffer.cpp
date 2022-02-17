@@ -181,9 +181,8 @@ void buffer::save() {
 }
 
 void buffer::cursor_click(coord click) {
-    if (click.row < content.size() && click.col < content[click.row].size()) {
-        cursor = click;
-    } else {
+    cursor = click;
+    if (click.row > content.size()) {
         cursor.row = content.size() - 1;
         cursor.col = content.back().size();
     }

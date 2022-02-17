@@ -15,6 +15,8 @@
 #include <stdexcept>
 #include <tuple>
 
+constexpr float x_offset = 20.0f;
+
 namespace cgull {
 renderer::renderer(coord w_size, buffer* buf) : text_buffer(buf) {
     window_size = w_size;
@@ -78,20 +80,20 @@ constexpr float renderer::max_scroll() {
 coord renderer::mouse_to_buffer(coord mouse_pos) {
     coord c;
     c.row = ((float)mouse_pos.row + scroll_pos_y - (face_height / 2)) / face_height;
+    c.row = c.row > text_buffer->content.size() - 1 ? text_buffer->content.size() - 1 : c.row;
     c.col = 0;
     int char_count = 0;
     for (int i = 0; i < c.row; i++) {
         char_count += text_buffer->content[i].size();
     }
     for (int i = 0; i < text_buffer->content[c.row].size(); i++) {
-        if (mouse_pos.col < vertices[(char_count + i) * 24 + 4] + (advances[char_count + i] / 2.0f) &&
-            mouse_pos.col >= vertices[(char_count + i - 1) * 24 + 4] - (advances[char_count + i - 1] / 2.0f)) {
-            c.col = i;
-            text_cursor.pos_x =
-                std::accumulate(advances.begin() + char_count, advances.begin() + char_count + i + 2, 0);
+        if (mouse_pos.col >= vertices[(char_count + i) * 24 + 4] + (advances[char_count + i] / 2.0f)) {
+            c.col++;
+        } else {
             break;
         }
     }
+    text_cursor.pos_x = x_offset + std::accumulate(advances.begin() + char_count, advances.begin() + char_count + c.col, 0);
 
     return c;
 }
@@ -224,7 +226,7 @@ std::vector<float> renderer::generate_batched_vertices(const text& text_content)
     float y = face_height;
 
     for (unsigned int r = 0; r < text_content.size(); r++) {
-        float x = 20.0f;
+        float x = x_offset;
         for (unsigned int c = 0; c < text_content[r].size(); c++) {
             const auto& glyph = glyph_map[text_content[r][c]];
 
@@ -285,7 +287,7 @@ void renderer::draw_text() {
 }
 
 void renderer::draw_cursor() {
-    float xpos = 20.0f;
+    float xpos = x_offset;
     float ypos = text_cursor.height + (face_height * text_buffer->cursor.row) - face_height - 1.0f; // just works
     if (text_buffer->cursor.col != 0) {
         xpos = text_cursor.pos_x;
