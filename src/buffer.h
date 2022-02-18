@@ -37,5 +37,6 @@ struct buffer {
     void cursor_down();
     void save();
     void cursor_click(coord click);
+    bool cursor_move(coord pos); // returns true if selection has changed
 };
 } // namespace cgull

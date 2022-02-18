@@ -18,6 +18,7 @@ struct special_key_action {
 struct click_action {
     coord click_coord;
     mouse_button mb;
+    bool pressed;
 };
 struct resize_action {
     coord size;
@@ -26,14 +27,23 @@ struct scroll_action {
     float x_offset;
     float y_offset;
 };
+struct mouse_move_action {
+    coord pos;
+};
 
-using action = std::variant<char_action, special_key_action, click_action, resize_action, scroll_action>;
+using action = std::variant<char_action,
+                            special_key_action,
+                            click_action,
+                            resize_action,
+                            scroll_action,
+                            mouse_move_action>;
 
 struct editor {
     coord window_size;
     renderer* renderer_ptr;
     buffer buf;
     key_map keys;
+    bool mouse_down = false;
 
     editor(coord w_size, key_map km);
     void update(std::vector<action> actions);

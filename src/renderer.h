@@ -22,7 +22,7 @@ struct glyph_info {
 
 namespace cgull {
 struct cursor {
-    unsigned int vao, vbo, shader;
+    unsigned int vao, vbo;
     float pos_x, pos_y;
     float height;
 };
@@ -32,6 +32,7 @@ struct renderer {
 
     buffer* text_buffer;
     unsigned int text_vao, text_vbo, text_texture, text_shader;
+    unsigned int simple_shader;
     unsigned int proj_ubo;
     unsigned int font_atlas_width, font_atlas_height = 0;
     coord window_size;
@@ -42,6 +43,7 @@ struct renderer {
     cursor text_cursor;
     std::vector<float> vertices;
     std::vector<float> advances;
+    std::vector<float> x_bearings;
     bool text_changed;
     float scroll_pos_y;
     float scroll_pos_x;
@@ -51,12 +53,14 @@ struct renderer {
 
     constexpr float max_scroll();
     coord mouse_to_buffer(coord mouse_pos);
+    void set_cursor_pos(coord cursor_coord);
     void render();
     void load_glyphs();
     std::vector<float> generate_batched_vertices(const text& text_content);
     void update_font_size();
     void draw_text();
     void draw_cursor();
+    void draw_selection();
     void update_projection();
 };
 

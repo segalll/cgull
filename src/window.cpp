@@ -57,13 +57,13 @@ window::window() {
     });
 
     glfwSetMouseButtonCallback(glfw_window, [](GLFWwindow* window, int button, int action, int mods) {
-        if (action != GLFW_RELEASE && (button == GLFW_MOUSE_BUTTON_LEFT || button == GLFW_MOUSE_BUTTON_RIGHT)) {
+        if (button == GLFW_MOUSE_BUTTON_LEFT || button == GLFW_MOUSE_BUTTON_RIGHT) {
             double xpos, ypos;
             glfwGetCursorPos(window, &xpos, &ypos);
             coord c = {static_cast<index>(ypos), static_cast<index>(xpos)};
             mouse_button mb = button == GLFW_MOUSE_BUTTON_LEFT ? mouse_button::left : mouse_button::right;
             static_cast<struct window*>(glfwGetWindowUserPointer(window))
-                ->pending_actions.push_back(click_action{c, mb});
+                ->pending_actions.push_back(click_action{c, mb, action == GLFW_PRESS});
         }
     });
 
@@ -83,6 +83,15 @@ window::window() {
         window_ptr->pending_actions.push_back(scroll_action{
             static_cast<float>(x_offset) * 10.0f,
             static_cast<float>(y_offset) * 10.0f
+        });
+    });
+
+    glfwSetCursorPosCallback(glfw_window, [](GLFWwindow* window, double xpos, double ypos) {
+        struct window* window_ptr = static_cast<struct window*>(glfwGetWindowUserPointer(window));
+
+        window_ptr->pending_actions.push_back(mouse_move_action{
+            static_cast<index>(ypos),
+            static_cast<index>(xpos)
         });
     });
 }

@@ -128,6 +128,7 @@ void buffer::cursor_left() {
     } else {
         cursor.col -= 1;
     }
+    selection_start = std::nullopt;
 }
 
 void buffer::cursor_right() {
@@ -139,6 +140,7 @@ void buffer::cursor_right() {
     } else {
         cursor.col += 1;
     }
+    selection_start = std::nullopt;
 }
 
 void buffer::cursor_up() {
@@ -148,6 +150,7 @@ void buffer::cursor_up() {
         cursor.row -= 1;
         cursor.col = content[cursor.row].size() < cursor.col ? content[cursor.row].size() : cursor.col;
     }
+    selection_start = std::nullopt;
 }
 
 void buffer::cursor_down() {
@@ -157,6 +160,7 @@ void buffer::cursor_down() {
         cursor.row += 1;
         cursor.col = content[cursor.row].size() < cursor.col ? content[cursor.row].size() : cursor.col;
     }
+    selection_start = std::nullopt;
 }
 
 void buffer::save() {
@@ -182,9 +186,22 @@ void buffer::save() {
 
 void buffer::cursor_click(coord click) {
     cursor = click;
+    selection_start = std::nullopt;
     if (click.row > content.size()) {
         cursor.row = content.size() - 1;
         cursor.col = content.back().size();
     }
+}
+
+bool buffer::cursor_move(coord pos) {
+    coord old_cursor = cursor;
+    cursor = pos;
+    if (old_cursor != cursor) {
+        if (selection_start == std::nullopt) {
+            selection_start = old_cursor;
+        }
+        return true;
+    }
+    return false;
 }
 } // namespace cgull

@@ -76,8 +76,22 @@ void editor::update(std::vector<action> actions) {
             renderer_ptr->scroll_pos_y -= sa.y_offset;
         } else if (std::holds_alternative<click_action>(a)) {
             const auto ca = std::get<click_action>(a);
-            coord c = renderer_ptr->mouse_to_buffer(ca.click_coord);
-            buf.cursor_click(c);
+            if (ca.pressed) {
+                coord c = renderer_ptr->mouse_to_buffer(ca.click_coord);
+                renderer_ptr->set_cursor_pos(c);
+                buf.cursor_click(c);
+                mouse_down = true;
+            } else {
+                mouse_down = false;
+            }
+        } else if (std::holds_alternative<mouse_move_action>(a)) {
+            if (!mouse_down) continue;
+            const auto mma = std::get<mouse_move_action>(a);
+            coord c = renderer_ptr->mouse_to_buffer(mma.pos);
+            bool selection_changed = buf.cursor_move(c);
+            if (selection_changed) {
+                renderer_ptr->set_cursor_pos(c);
+            }
         }
     }
 }
