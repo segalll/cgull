@@ -85,7 +85,8 @@ void editor::update(std::vector<action> actions) {
                 mouse_down = false;
             }
         } else if (std::holds_alternative<mouse_move_action>(a)) {
-            if (!mouse_down) continue;
+            if (!mouse_down)
+                continue;
             const auto mma = std::get<mouse_move_action>(a);
             coord c = renderer_ptr->mouse_to_buffer(mma.pos);
             bool selection_changed = buf.cursor_move(c);

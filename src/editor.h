@@ -31,12 +31,8 @@ struct mouse_move_action {
     coord pos;
 };
 
-using action = std::variant<char_action,
-                            special_key_action,
-                            click_action,
-                            resize_action,
-                            scroll_action,
-                            mouse_move_action>;
+using action =
+    std::variant<char_action, special_key_action, click_action, resize_action, scroll_action, mouse_move_action>;
 
 struct editor {
     coord window_size;

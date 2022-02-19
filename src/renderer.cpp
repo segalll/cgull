@@ -82,12 +82,8 @@ coord renderer::mouse_to_buffer(coord mouse_pos) {
     c.row = ((float)mouse_pos.row + scroll_pos_y - (face_height / 2)) / face_height;
     c.row = c.row > text_buffer->content.size() - 1 ? text_buffer->content.size() - 1 : c.row;
     c.col = 0;
-    int char_count = 0;
-    for (int i = 0; i < c.row; i++) {
-        char_count += text_buffer->content[i].size();
-    }
     for (int i = 0; i < text_buffer->content[c.row].size(); i++) {
-        if (mouse_pos.col >= vertices[(char_count + i) * 24 + 4] + (advances[char_count + i] / 2.0f)) {
+        if (mouse_pos.col >= vertices[row_indices[c.row] + (i * 24) + 4] + (advances[c.row][i] / 2.0f)) {
             c.col++;
         } else {
             break;
@@ -97,13 +93,9 @@ coord renderer::mouse_to_buffer(coord mouse_pos) {
     return c;
 }
 
-void renderer::set_cursor_pos(coord cursor_coord) {
-    int char_count = 0;
-    for (int i = 0; i < cursor_coord.row; i++) {
-        char_count += text_buffer->content[i].size();
-    }
-
-    text_cursor.pos_x = x_offset + std::accumulate(advances.begin() + char_count, advances.begin() + char_count + cursor_coord.col, 0);
+void renderer::set_cursor_pos(coord c) {
+    text_cursor.pos_x =
+        c.col == 0 ? x_offset : vertices[row_indices[c.row] + (c.col * 24) + 4] - bearings[c.row][c.col];
 }
 
 void renderer::render() {
@@ -234,7 +226,13 @@ std::vector<float> renderer::generate_batched_vertices(const text& text_content)
 
     float y = face_height;
 
+    row_indices = {};
+    advances = {};
+    bearings = {};
     for (unsigned int r = 0; r < text_content.size(); r++) {
+        row_indices.push_back(v.size());
+        advances.push_back({});
+        bearings.push_back({});
         float x = x_offset;
         for (unsigned int c = 0; c < text_content[r].size(); c++) {
             const auto& glyph = glyph_map[text_content[r][c]];
@@ -256,8 +254,8 @@ std::vector<float> renderer::generate_batched_vertices(const text& text_content)
                                glyph.tx,      glyph.ty,      xpos,          ypos + h,      glyph.tx,      glyph.ty + th,
                                xpos,          ypos + h,      glyph.tx,      glyph.ty + th, xpos + w,      ypos + h,
                                glyph.tx + tw, glyph.ty + th, xpos + w,      ypos,          glyph.tx + tw, glyph.ty});
-            advances.push_back(glyph.ax);
-            x_bearings.push_back(glyph.bl);
+            advances[r].push_back(glyph.ax);
+            bearings[r].push_back(glyph.bl);
 
             x += glyph.ax;
             y += glyph.ay;
@@ -303,12 +301,12 @@ void renderer::draw_cursor() {
     }
 
     const std::vector<float> vertices = {
-        xpos + 2.0f, ypos,
-        xpos,        ypos,
-        xpos,        ypos + text_cursor.height,
-        xpos,        ypos + text_cursor.height,
-        xpos + 2.0f, ypos + text_cursor.height,
-        xpos + 2.0f, ypos,
+        xpos + 1.0f, ypos,
+        xpos - 1.0f,        ypos,
+        xpos - 1.0f,        ypos + text_cursor.height,
+        xpos - 1.0f,        ypos + text_cursor.height,
+        xpos + 1.0f, ypos + text_cursor.height,
+        xpos + 1.0f, ypos,
     };
     glBindVertexArray(text_cursor.vao);
     glUseProgram(simple_shader);
@@ -336,21 +334,17 @@ void renderer::draw_selection() {
         back = *text_buffer->selection_start;
     }
     for (int r = front.row; r <= back.row; r++) {
-        int char_count = 0;
-        for (int i = 0; i < r; i++) {
-            char_count += text_buffer->content[i].size();
-        }
-
         float start_x, end_x;
-        if (r == front.row) {
-            start_x = vertices[(char_count + front.col) * 24 + 4] - x_bearings[(char_count + front.col) * 24 + 4];
+        if (r == front.row && front.col != 0) {
+            start_x = vertices[row_indices[r] + (front.col * 24) + 4] - bearings[r][front.col];
         } else {
             start_x = x_offset;
         }
         if (r + 1 <= back.row) {
-            end_x = vertices[(char_count + text_buffer->content[r].size() - 1) * 24] + advances[(char_count + text_buffer->content[r].size() - 1) * 24];
+            end_x = vertices[row_indices[r] + (text_buffer->content[r].size() - 1) * 24] + 12.0f;
         } else {
-            end_x = vertices[(char_count + back.col - 1) * 24];
+            end_x = back.col == 0 ? x_offset
+                                  : vertices[row_indices[r] + (back.col - 1) * 24 + 4] + advances[r][back.col - 1];
         }
         float ypos = text_cursor.height + (face_height * r) - face_height + 1.0f;
         selection_vertices.insert(selection_vertices.end(), {
@@ -366,7 +360,8 @@ void renderer::draw_selection() {
     glBindVertexArray(text_cursor.vao);
     glUseProgram(simple_shader);
     glBindBuffer(GL_ARRAY_BUFFER, text_cursor.vbo);
-    glBufferData(GL_ARRAY_BUFFER, selection_vertices.size() * sizeof(float), selection_vertices.data(), GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, selection_vertices.size() * sizeof(float), selection_vertices.data(),
+                 GL_DYNAMIC_DRAW);
 
     float c[] = {1.0f, 1.0f, 1.0f, 0.3f};
     glUniform4fv(glGetUniformLocation(simple_shader, "color"), 1, c);

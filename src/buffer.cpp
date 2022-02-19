@@ -8,21 +8,21 @@
 #include "utf8.h"
 
 namespace {
-bool is_quote(char32_t character) { return character == U'"' || character == U'\''; }
+constexpr bool is_quote(char32_t character) { return character == U'"' || character == U'\''; }
 
-bool is_bracket(char32_t character) { return character == U'(' || character == U'{' || character == U'['; }
+constexpr bool is_bracket(char32_t character) { return character == U'(' || character == U'{' || character == U'['; }
 
-bool is_closing_bracket(char32_t character) { return character == U')' || character == U'}' || character == U']'; }
+constexpr bool is_closing_bracket(char32_t character) { return character == U')' || character == U'}' || character == U']'; }
 
-char32_t corresponding_bracket(char32_t bracket) { return bracket == U'(' ? ')' : bracket + 2; }
+constexpr char32_t corresponding_bracket(char32_t bracket) { return bracket == U'(' ? ')' : bracket + 2; }
 
-bool is_container(char32_t character) {
+constexpr bool is_container(char32_t character) {
     return character == U'(' || character == U'{' || character == U'[' || character == U'"' || character == U'\'';
 }
 
-bool is_closing_container(char32_t character) { return is_quote(character) || is_closing_bracket(character); }
+constexpr bool is_closing_container(char32_t character) { return is_quote(character) || is_closing_bracket(character); }
 
-char32_t corresponding_container(char32_t character) {
+constexpr char32_t corresponding_container(char32_t character) {
     return is_quote(character) ? character : corresponding_bracket(character);
 }
 } // namespace

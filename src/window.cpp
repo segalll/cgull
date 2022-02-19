@@ -80,19 +80,14 @@ window::window() {
     glfwSetScrollCallback(glfw_window, [](GLFWwindow* window, double x_offset, double y_offset) {
         struct window* window_ptr = static_cast<struct window*>(glfwGetWindowUserPointer(window));
 
-        window_ptr->pending_actions.push_back(scroll_action{
-            static_cast<float>(x_offset) * 10.0f,
-            static_cast<float>(y_offset) * 10.0f
-        });
+        window_ptr->pending_actions.push_back(
+            scroll_action{static_cast<float>(x_offset) * 10.0f, static_cast<float>(y_offset) * 10.0f});
     });
 
     glfwSetCursorPosCallback(glfw_window, [](GLFWwindow* window, double xpos, double ypos) {
         struct window* window_ptr = static_cast<struct window*>(glfwGetWindowUserPointer(window));
 
-        window_ptr->pending_actions.push_back(mouse_move_action{
-            static_cast<index>(ypos),
-            static_cast<index>(xpos)
-        });
+        window_ptr->pending_actions.push_back(mouse_move_action{static_cast<index>(ypos), static_cast<index>(xpos)});
     });
 }
 

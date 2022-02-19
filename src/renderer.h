@@ -42,8 +42,9 @@ struct renderer {
     unsigned int desired_font_size;
     cursor text_cursor;
     std::vector<float> vertices;
-    std::vector<float> advances;
-    std::vector<float> x_bearings;
+    std::vector<uint32_t> row_indices; // row indices into vertex buffer
+    std::vector<std::vector<float>> advances;
+    std::vector<std::vector<float>> bearings;
     bool text_changed;
     float scroll_pos_y;
     float scroll_pos_x;
@@ -53,7 +54,7 @@ struct renderer {
 
     constexpr float max_scroll();
     coord mouse_to_buffer(coord mouse_pos);
-    void set_cursor_pos(coord cursor_coord);
+    void set_cursor_pos(coord c);
     void render();
     void load_glyphs();
     std::vector<float> generate_batched_vertices(const text& text_content);
