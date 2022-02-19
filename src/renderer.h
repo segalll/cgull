@@ -53,6 +53,7 @@ struct renderer {
     std::unordered_map<key_code, glyph_info> glyph_map;
 
     constexpr float max_scroll();
+    constexpr float proper_cursor_pos(coord c);
     coord mouse_to_buffer(coord mouse_pos);
     void set_cursor_pos(coord c);
     void render();
