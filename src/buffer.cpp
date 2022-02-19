@@ -153,47 +153,65 @@ void buffer::backspace() {
 }
 
 void buffer::cursor_left() {
-    if (cursor.col == 0) {
-        if (cursor.row != 0) {
-            cursor.row = cursor.row - 1 > 0 ? cursor.row - 1 : 0;
-            cursor.col = content[cursor.row].size();
+    if (selection_start == std::nullopt) {
+        if (cursor.col == 0) {
+            if (cursor.row != 0) {
+                cursor.row = cursor.row - 1 > 0 ? cursor.row - 1 : 0;
+                cursor.col = content[cursor.row].size();
+            }
+        } else {
+            cursor.col -= 1;
         }
     } else {
-        cursor.col -= 1;
+        auto [front, _] = get_selection_ends();
+        cursor = front;
+        selection_start = std::nullopt;
     }
-    selection_start = std::nullopt;
 }
 
 void buffer::cursor_right() {
-    if (cursor.col >= content[cursor.row].size()) {
-        if (cursor.row < content.size() - 1) {
-            cursor.row += 1;
-            cursor.col = 0;
+    if (selection_start == std::nullopt) {
+        if (cursor.col >= content[cursor.row].size()) {
+            if (cursor.row < content.size() - 1) {
+                cursor.row += 1;
+                cursor.col = 0;
+            }
+        } else {
+            cursor.col += 1;
         }
     } else {
-        cursor.col += 1;
+        auto [_, back] = get_selection_ends();
+        cursor = back;
+        selection_start = std::nullopt;
     }
-    selection_start = std::nullopt;
 }
 
 void buffer::cursor_up() {
+    if (selection_start != std::nullopt) {
+        auto [front, _] = get_selection_ends();
+        cursor = front;
+        selection_start = std::nullopt;
+    }
     if (cursor.row == 0) {
         cursor.col = 0;
     } else {
         cursor.row -= 1;
         cursor.col = content[cursor.row].size() < cursor.col ? content[cursor.row].size() : cursor.col;
     }
-    selection_start = std::nullopt;
 }
 
 void buffer::cursor_down() {
+    if (selection_start != std::nullopt) {
+        auto [_, back] = get_selection_ends();
+        cursor = back;
+        selection_start = std::nullopt;
+    }
     if (cursor.row >= content.size() - 1) {
         cursor.col = content.back().size();
     } else {
         cursor.row += 1;
         cursor.col = content[cursor.row].size() < cursor.col ? content[cursor.row].size() : cursor.col;
     }
-    selection_start = std::nullopt;
 }
 
 void buffer::save() {
