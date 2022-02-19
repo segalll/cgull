@@ -4,6 +4,7 @@
 
 #include <fstream>
 #include <optional>
+#include <tuple>
 #include <vector>
 
 namespace cgull {
@@ -30,6 +31,7 @@ struct buffer {
     void new_line();
     void indent();
     bool unindent();
+    void delete_selection();
     void backspace();
     void cursor_left();
     void cursor_right();
@@ -38,5 +40,15 @@ struct buffer {
     void save();
     void cursor_click(coord click);
     bool cursor_move(coord pos); // returns true if selection has changed
+
+    constexpr std::tuple<coord, coord> get_selection_ends() {
+        coord front = *selection_start;
+        coord back = cursor;
+        if (front.row > back.row || (front.row == back.row && front.col > back.col)) {
+            front = cursor;
+            back = *selection_start;
+        }
+        return {front, back};
+    }
 };
 } // namespace cgull

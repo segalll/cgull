@@ -49,17 +49,31 @@ buffer::buffer(const std::string& filepath) : file_path(filepath) {
 }
 
 void buffer::enter_char(char32_t new_char) {
-    std::u32string insertion;
-    if (is_closing_container(new_char) && content[cursor.row].size() > cursor.col &&
-        content[cursor.row][cursor.col] == new_char) {
-        insertion = {};
-    } else if (is_container(new_char)) {
-        insertion = {new_char, corresponding_container(new_char)};
+    if (selection_start == std::nullopt) {
+        std::u32string insertion;
+        if (is_closing_container(new_char) && content[cursor.row].size() > cursor.col &&
+            content[cursor.row][cursor.col] == new_char) {
+            insertion = {};
+        } else if (is_container(new_char)) {
+            insertion = {new_char, corresponding_container(new_char)};
+        } else {
+            insertion = {new_char};
+        }
+        content[cursor.row].insert(cursor.col, insertion);
+        cursor.col += 1;
     } else {
-        insertion = {new_char};
+        if (is_container(new_char)) {
+            auto [front, back] = get_selection_ends();
+            content[front.row].insert(front.col, {new_char});
+            selection_start->col += 1;
+            content[back.row].insert(back.col + 1, {corresponding_container(new_char)});
+            cursor.col += 1;
+        } else {
+            delete_selection();
+            content[cursor.row].insert(cursor.col, {new_char});
+            cursor.col += 1;
+        }
     }
-    content[cursor.row].insert(cursor.col, insertion);
-    cursor.col += 1;
 }
 
 void buffer::new_line() {
@@ -99,23 +113,42 @@ bool buffer::unindent() {
     return false;
 }
 
-void buffer::backspace() {
-    if (unindent()) {
-        return;
+void buffer::delete_selection() {
+    auto [front, back] = get_selection_ends();
+    const int delete_count = back.row - front.row;
+    if (delete_count > 0) {
+        content[front.row].erase(front.col);
+        content[back.row].erase(0, back.col);
+        content[front.row].insert(content[front.row].size(), content[back.row]);
+        content.erase(content.begin() + front.row + 1, content.begin() + back.row + 1);
+    } else {
+        content[front.row].erase(front.col, back.col - front.col);
     }
-    if (cursor.col > 0) {
-        cursor.col -= 1;
-        if (is_container(content[cursor.row][cursor.col]) &&
-            content[cursor.row][cursor.col + 1] == corresponding_container(content[cursor.row][cursor.col])) {
-            content[cursor.row].erase(cursor.col, 2);
-        } else {
-            content[cursor.row].erase(content[cursor.row].begin() + cursor.col);
+    cursor = front;
+    selection_start = std::nullopt;
+}
+
+void buffer::backspace() {
+    if (selection_start == std::nullopt) {
+        if (unindent()) {
+            return;
         }
-    } else if (cursor.row > 0) {
-        cursor.col = content[cursor.row - 1].size();
-        content[cursor.row - 1] += content[cursor.row];
-        content.erase(content.begin() + cursor.row);
-        cursor.row -= 1;
+        if (cursor.col > 0) {
+            cursor.col -= 1;
+            if (is_container(content[cursor.row][cursor.col]) &&
+                content[cursor.row][cursor.col + 1] == corresponding_container(content[cursor.row][cursor.col])) {
+                content[cursor.row].erase(cursor.col, 2);
+            } else {
+                content[cursor.row].erase(content[cursor.row].begin() + cursor.col);
+            }
+        } else if (cursor.row > 0) {
+            cursor.col = content[cursor.row - 1].size();
+            content[cursor.row - 1] += content[cursor.row];
+            content.erase(content.begin() + cursor.row);
+            cursor.row -= 1;
+        }
+    } else {
+        delete_selection();
     }
 }
 

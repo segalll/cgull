@@ -328,12 +328,7 @@ void renderer::draw_selection() {
 
     std::vector<float> selection_vertices;
 
-    coord front = *text_buffer->selection_start;
-    coord back = text_buffer->cursor;
-    if (front.row > back.row || (front.row == back.row && front.col > back.col)) {
-        front = text_buffer->cursor;
-        back = *text_buffer->selection_start;
-    }
+    auto [front, back] = text_buffer->get_selection_ends();
     for (int r = front.row; r <= back.row; r++) {
         float start_x, end_x;
         if (r == front.row && front.col != 0) {
