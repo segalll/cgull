@@ -94,8 +94,9 @@ coord renderer::mouse_to_buffer(coord mouse_pos) {
 }
 
 void renderer::set_cursor_pos(coord c) {
-    text_cursor.pos_x =
-        c.col == 0 ? x_offset : vertices[row_indices[c.row] + (c.col * 24) + 4] - bearings[c.row][c.col];
+    text_cursor.pos_x = c.col == 0
+        ? x_offset
+        : vertices[row_indices[c.row] + (c.col - 1) * 24 + 4] + advances[c.row][c.col - 1] - bearings[c.row][c.col - 1];
 }
 
 void renderer::render() {
@@ -302,9 +303,9 @@ void renderer::draw_cursor() {
 
     const std::vector<float> vertices = {
         xpos + 1.0f, ypos,
-        xpos - 1.0f,        ypos,
-        xpos - 1.0f,        ypos + text_cursor.height,
-        xpos - 1.0f,        ypos + text_cursor.height,
+        xpos - 1.0f, ypos,
+        xpos - 1.0f, ypos + text_cursor.height,
+        xpos - 1.0f, ypos + text_cursor.height,
         xpos + 1.0f, ypos + text_cursor.height,
         xpos + 1.0f, ypos,
     };
@@ -336,23 +337,25 @@ void renderer::draw_selection() {
     for (int r = front.row; r <= back.row; r++) {
         float start_x, end_x;
         if (r == front.row && front.col != 0) {
-            start_x = vertices[row_indices[r] + (front.col * 24) + 4] - bearings[r][front.col];
+            start_x = vertices[row_indices[r] + (front.col - 1) * 24 + 4] + advances[r][front.col - 1] - bearings[r][front.col - 1];
         } else {
             start_x = x_offset;
         }
         if (r + 1 <= back.row) {
-            end_x = vertices[row_indices[r] + (text_buffer->content[r].size() - 1) * 24] + 12.0f;
+            end_x = (text_buffer->content[r].size() == 0
+                ? x_offset
+                : vertices[row_indices[r] + (text_buffer->content[r].size() - 1) * 24]) + 12.0f;
         } else {
             end_x = back.col == 0 ? x_offset
                                   : vertices[row_indices[r] + (back.col - 1) * 24 + 4] + advances[r][back.col - 1];
         }
-        float ypos = text_cursor.height + (face_height * r) - face_height + 1.0f;
+        float ypos = face_height * (r + 0.25);
         selection_vertices.insert(selection_vertices.end(), {
             end_x, ypos,
             start_x, ypos,
-            start_x, ypos + text_cursor.height - 5.0f,
-            start_x, ypos + text_cursor.height - 5.0f,
-            end_x, ypos + text_cursor.height - 5.0f,
+            start_x, ypos + face_height,
+            start_x, ypos + face_height,
+            end_x, ypos + face_height,
             end_x, ypos
         });
     }
