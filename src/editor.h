@@ -5,6 +5,7 @@
 #include "inputs.h"
 #include "renderer.h"
 
+#include <future>
 #include <variant>
 
 namespace cgull {
@@ -40,6 +41,7 @@ struct editor {
     buffer buf;
     key_map keys;
     bool mouse_down = false;
+    std::future<void> f;
 
     editor(coord w_size, key_map km);
     void update(std::vector<action> actions);

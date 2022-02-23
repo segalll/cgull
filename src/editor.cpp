@@ -4,6 +4,7 @@
 
 #include <array>
 #include <iostream>
+#include <future>
 #include <memory>
 #include <variant>
 
@@ -58,7 +59,8 @@ void editor::update(std::vector<action> actions) {
             } else if (command == "save") {
                 buf.save();
             } else if (command == "compile") {
-                compile();
+                f = std::async(std::launch::async, [this]{compile();});
+                // not clean but must save future or else it blocks because of destructor
             } else if (command == "zoom-in") {
                 renderer_ptr->desired_font_size += 2;
             } else if (command == "zoom-out") {
@@ -114,7 +116,7 @@ void editor::compile() {
     std::string compileResult = exec("javac " + buf.file_path.value());
     std::string runResult = exec("java -cp " + path + " " + filename.substr(0, filename.length() - 5));
     std::cout << compileResult << "\n";
-    std::cout << runResult << "\n";
+    std::cout << runResult << "\n";  
 }
 
 void editor::open() {
