@@ -105,7 +105,7 @@ void buffer::indent() {
 bool buffer::unindent() {
     int indent_pos = content[cursor.row].find_first_not_of(U' ', cursor.col);
     indent_pos = indent_pos == -1 ? content[cursor.row].size() : indent_pos;
-    if (indent_pos >= 4 && content[cursor.row].substr(indent_pos - 4, 4) == U"    ") {
+    if (indent_pos > 0 && indent_pos % 4 == 0 && content[cursor.row].substr(indent_pos - 4, 4) == U"    ") {
         content[cursor.row].erase(indent_pos - 4, 4);
         cursor.col = cursor.col < 4 ? 0 : cursor.col - 4;
         return true;
