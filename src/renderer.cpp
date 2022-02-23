@@ -42,8 +42,10 @@ renderer::renderer(coord w_size, buffer* buf) : text_buffer(buf) {
     glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(text_vertex), 0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(text_vertex), (void*)(2 * sizeof(float)));
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(text_vertex), (void*)(4 * sizeof(float)));
 
     glGenVertexArrays(1, &text_cursor.vao);
     glGenBuffers(1, &text_cursor.vbo);
@@ -80,7 +82,7 @@ constexpr float renderer::max_scroll() {
 constexpr float renderer::proper_cursor_pos(coord c) {
     return c.col == 0
         ? x_offset
-        : vertices[row_indices[c.row] + (c.col - 1) * 24 + 4] + advances[c.row][c.col - 1] - bearings[c.row][c.col - 1];
+        : vertices[row_indices[c.row] + (c.col - 1) * 6 + 1].x + advances[c.row][c.col - 1] - bearings[c.row][c.col - 1];
 }
 
 coord renderer::mouse_to_buffer(coord mouse_pos) {
@@ -89,7 +91,7 @@ coord renderer::mouse_to_buffer(coord mouse_pos) {
     c.row = c.row > text_buffer->content.size() - 1 ? text_buffer->content.size() - 1 : c.row;
     c.col = 0;
     for (int i = 0; i < text_buffer->content[c.row].size(); i++) {
-        if (mouse_pos.col >= vertices[row_indices[c.row] + (i * 24) + 4] + (advances[c.row][i] / 2.0f)) {
+        if (mouse_pos.col >= vertices[row_indices[c.row] + (i * 6) + 1].x + (advances[c.row][i] / 2.0f)) {
             c.col++;
         } else {
             break;
@@ -226,8 +228,8 @@ void renderer::update_projection() {
     glBufferData(GL_UNIFORM_BUFFER, sizeof(m), glm::value_ptr(m), GL_STATIC_DRAW);
 }
 
-std::vector<float> renderer::generate_batched_vertices(const text& text_content) {
-    std::vector<float> v;
+std::vector<text_vertex> renderer::generate_batched_vertices(const text& text_content) {
+    std::vector<text_vertex> v;
 
     float y = face_height;
 
@@ -255,10 +257,14 @@ std::vector<float> renderer::generate_batched_vertices(const text& text_content)
             const float tw = glyph.bw / static_cast<float>(font_atlas_width);
             const float th = glyph.bh / static_cast<float>(font_atlas_height);
 
-            v.insert(v.end(), {xpos + w,      ypos,          glyph.tx + tw, glyph.ty,      xpos,          ypos,
-                               glyph.tx,      glyph.ty,      xpos,          ypos + h,      glyph.tx,      glyph.ty + th,
-                               xpos,          ypos + h,      glyph.tx,      glyph.ty + th, xpos + w,      ypos + h,
-                               glyph.tx + tw, glyph.ty + th, xpos + w,      ypos,          glyph.tx + tw, glyph.ty});
+            v.insert(v.end(), {
+                text_vertex{ xpos + w, ypos, glyph.tx + tw, glyph.ty, 1.0, 1.0, 1.0 },
+                text_vertex{ xpos, ypos, glyph.tx, glyph.ty, 1.0, 1.0, 1.0 },
+                text_vertex{ xpos, ypos + h, glyph.tx, glyph.ty + th, 1.0, 1.0, 1.0 },
+                text_vertex{ xpos, ypos + h, glyph.tx, glyph.ty + th, 1.0, 1.0, 1.0 },
+                text_vertex{ xpos + w, ypos + h, glyph.tx + tw, glyph.ty + th, 1.0, 1.0, 1.0 },
+                text_vertex{ xpos + w, ypos, glyph.tx + tw, glyph.ty, 1.0, 1.0, 1.0 }
+            });
             advances[r].push_back(glyph.ax);
             bearings[r].push_back(glyph.bl);
 
@@ -289,13 +295,11 @@ void renderer::draw_text() {
     glBindTexture(GL_TEXTURE_2D, text_texture);
     glUseProgram(text_shader);
     glBindBuffer(GL_ARRAY_BUFFER, text_vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(text_vertex), vertices.data(), GL_DYNAMIC_DRAW);
 
-    float c[] = {1.0f, 1.0f, 1.0f};
-    glUniform3fv(glGetUniformLocation(text_shader, "color"), 1, c);
     float s[] = {scroll_pos_x, scroll_pos_y};
     glUniform2fv(glGetUniformLocation(text_shader, "scroll"), 1, s);
-    glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 4); // 4 components per vertex
+    glDrawArrays(GL_TRIANGLES, 0, vertices.size()); // 4 components per vertex
 }
 
 void renderer::draw_cursor() {

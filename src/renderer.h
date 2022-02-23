@@ -18,6 +18,12 @@ struct glyph_info {
     float bl, bt; // bitmap_left, bitmap_top
     float tx, ty; // texture coordinates
 };
+
+struct text_vertex {
+    float x, y;
+    float tx, ty;
+    float r, g, b;
+};
 } // namespace
 
 namespace cgull {
@@ -41,7 +47,7 @@ struct renderer {
     unsigned int font_size;
     unsigned int desired_font_size;
     cursor text_cursor;
-    std::vector<float> vertices;
+    std::vector<text_vertex> vertices;
     std::vector<uint32_t> row_indices; // row indices into vertex buffer
     std::vector<std::vector<float>> advances;
     std::vector<std::vector<float>> bearings;
@@ -58,7 +64,7 @@ struct renderer {
     void set_cursor_pos(coord c);
     void render();
     void load_glyphs();
-    std::vector<float> generate_batched_vertices(const text& text_content);
+    std::vector<text_vertex> generate_batched_vertices(const text& text_content);
     void update_font_size();
     void draw_text();
     void draw_cursor();
