@@ -122,11 +122,8 @@ void renderer::render() {
     }
 
     draw_text();
-    std::cout << "text\n";
     draw_cursor();
-    std::cout << "cursor\n";
     draw_selection();
-    std::cout << "selection\n";
 }
 
 void renderer::load_glyphs() {
@@ -245,7 +242,7 @@ std::vector<text_vertex> renderer::generate_batched_vertices(const text& text_co
         bearings.push_back({});
         float x = x_offset;
         std::u32string current_word = U"";
-        for (unsigned int c = 0; c < text_content[r].size(); c++) {
+        for (unsigned int c = 0; c < text_content[r].length(); c++) {
             const auto& glyph = glyph_map[text_content[r][c]];
 
             const float xpos = x + glyph.bl;
@@ -272,21 +269,21 @@ std::vector<text_vertex> renderer::generate_batched_vertices(const text& text_co
             if (current_word == U"hello") {
                 green = 0.3f;
             }
-            if (v.size() > 0) {
-                for (int i = (current_word.length() * 6); i >= 0; i--) {
-                    v[v.size() - i - 1].r = red;
-                    v[v.size() - i - 1].g = green;
-                    v[v.size() - i - 1].b = blue;
+            if (current_word.length() > 0) {
+                for (int i = (current_word.length() - 1) * 6; i >= 1; i--) {
+                    v[v.size() - i].r = red;
+                    v[v.size() - i].g = green;
+                    v[v.size() - i].b = blue;
                 }
             }
 
             v.insert(v.end(), {
-                text_vertex{ xpos + w, ypos, glyph.tx + tw, glyph.ty, red, green, blue },
-                text_vertex{ xpos, ypos, glyph.tx, glyph.ty, red, green, blue },
-                text_vertex{ xpos, ypos + h, glyph.tx, glyph.ty + th, red, green, blue },
-                text_vertex{ xpos, ypos + h, glyph.tx, glyph.ty + th, red, green, blue },
-                text_vertex{ xpos + w, ypos + h, glyph.tx + tw, glyph.ty + th, red, green, blue },
-                text_vertex{ xpos + w, ypos, glyph.tx + tw, glyph.ty, red, green, blue }
+                { xpos + w, ypos, glyph.tx + tw, glyph.ty, red, green, blue },
+                { xpos, ypos, glyph.tx, glyph.ty, red, green, blue },
+                { xpos, ypos + h, glyph.tx, glyph.ty + th, red, green, blue },
+                { xpos, ypos + h, glyph.tx, glyph.ty + th, red, green, blue },
+                { xpos + w, ypos + h, glyph.tx + tw, glyph.ty + th, red, green, blue },
+                { xpos + w, ypos, glyph.tx + tw, glyph.ty, red, green, blue }
             });
             advances[r].push_back(glyph.ax);
             bearings[r].push_back(glyph.bl);
@@ -306,13 +303,10 @@ void renderer::update_font_size() {
 }
 
 void renderer::draw_text() {
-    std::cout << "ok\n";
     if (text_changed) {
         vertices = generate_batched_vertices(text_buffer->content);
         text_changed = false;
     }
-
-    std::cout << "testing\n";
 
     if (vertices.size() <= 0)
         return;
@@ -321,15 +315,11 @@ void renderer::draw_text() {
     glBindTexture(GL_TEXTURE_2D, text_texture);
     glUseProgram(text_shader);
     glBindBuffer(GL_ARRAY_BUFFER, text_vbo);
-    std::cout << "how\n";
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(text_vertex), vertices.data(), GL_DYNAMIC_DRAW);
-
-    std::cout << "hi\n";
 
     float s[] = {scroll_pos_x, scroll_pos_y};
     glUniform2fv(glGetUniformLocation(text_shader, "scroll"), 1, s);
     glDrawArrays(GL_TRIANGLES, 0, vertices.size()); // 4 components per vertex
-    std::cout << "wtf\n";
 }
 
 void renderer::draw_cursor() {

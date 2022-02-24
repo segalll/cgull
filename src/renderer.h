@@ -23,7 +23,6 @@ struct text_vertex {
     float x, y;
     float tx, ty;
     float r, g, b;
-    float pad;
 };
 } // namespace
 
