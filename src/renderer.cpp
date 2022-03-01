@@ -242,6 +242,7 @@ std::vector<text_vertex> renderer::generate_batched_vertices(const text& text_co
         bearings.push_back({});
         float x = x_offset;
         std::u32string current_word = U"";
+        bool quote_active = false;
         for (unsigned int c = 0; c < text_content[r].length(); c++) {
             const auto& glyph = glyph_map[text_content[r][c]];
 
@@ -261,20 +262,37 @@ std::vector<text_vertex> renderer::generate_batched_vertices(const text& text_co
             float red = 1.0f;
             float green = 1.0f;
             float blue = 1.0f;
-            if (text_content[r][c] == U' ') {
+            if (text_content[r][c] == U' ' || text_content[r][c] == U';') {
                 current_word = U"";
-            } else {
+            } else if (text_content[r][c] == U'+' || text_content[r][c] == U'-' || text_content[r][c] == U'=' || text_content[r][c] == U'%' || text_content[r][c] == U'<') {
+                green = 0.3f;
+                blue = 0.1f;
+                current_word = U"";
+            } else if (text_content[r][c] != U'(' && text_content[r][c] != U')') {
                 current_word += text_content[r][c];
             }
-            if (current_word == U"hello") {
+            if (current_word == U"for" || current_word == U"if" || current_word == U"else" || current_word == U"int" || current_word == U"float" || current_word == U"boolean" || current_word == U"char") {
                 green = 0.3f;
+                blue = 0.3f;
+            }
+            if (current_word.find_first_not_of(U"0123456789") == std::u32string::npos && current_word.length() > 0) {
+                green = 0.6f;
+                blue = 0.3f;
             }
             if (current_word.length() > 0) {
+                int j = current_word.length();
                 for (int i = (current_word.length() - 1) * 6; i >= 1; i--) {
+                    if (i % 6 == 0) j--;
+                    if (current_word[j] == U'(' || current_word[j] == U')') continue;
                     v[v.size() - i].r = red;
                     v[v.size() - i].g = green;
                     v[v.size() - i].b = blue;
                 }
+            }
+            if (text_content[r][c] == U'(' || text_content[r][c] == U')') {
+                red = 1.0f;
+                green = 1.0f;
+                blue = 1.0f;
             }
 
             v.insert(v.end(), {
