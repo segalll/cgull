@@ -8,7 +8,7 @@
 #include <vector>
 
 namespace cgull {
-using line = std::u32string;
+using line = std::string;
 using text = std::vector<line>;
 
 struct snapshot {
@@ -27,7 +27,7 @@ struct buffer {
 
     buffer();
     buffer(const std::string& filepath);
-    void enter_char(char32_t new_char);
+    void enter_char(char new_char);
     void new_line();
     void indent();
     bool unindent();

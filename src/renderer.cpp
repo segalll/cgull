@@ -243,7 +243,7 @@ std::vector<text_vertex> renderer::generate_batched_vertices(const text& text_co
 
         float x = x_offset;
 
-        std::u32string current_word = U"";
+        std::string current_word = "";
         int cw_pos = -1;
 
         bool quote_active = false;
@@ -267,25 +267,49 @@ std::vector<text_vertex> renderer::generate_batched_vertices(const text& text_co
             float red = 1.0f;
             float green = 1.0f;
             float blue = 1.0f;
-            if (text_content[r][c] == U' ' || text_content[r][c] == U';' || text_content[r][c] == U'(' || text_content[r][c] == U')') {
-                current_word = U"";
+            if (text_content[r][c] == '\'' || text_content[r][c] == '\"') {
+                if (quote_active) {
+                    quote_active = false;
+                } else {
+                    quote_active = true;
+                }
+                red = 0;
+                green = 0.651f;
+                blue = 0.929f;
+            } else if (quote_active) {
+                red = 0.498f;
+                green = 0.722f;
+                blue = 0;
+            } else if (text_content[r][c] == ' ' || text_content[r][c] == ';' || text_content[r][c] == '(' || text_content[r][c] == ')') {
+                current_word = "";
                 cw_pos = -1;
-            } else if (text_content[r][c] == U'+' || text_content[r][c] == U'-' || text_content[r][c] == U'=' || text_content[r][c] == U'%' || text_content[r][c] == U'<') {
-                green = 0.3f;
-                blue = 0.1f;
-                current_word = U"";
+            } else if (text_content[r][c] == '+' || text_content[r][c] == '-' || text_content[r][c] == '=' || text_content[r][c] == '%' || text_content[r][c] == '<') {
+                red = 0.961f;
+                green = 0.365f;
+                blue = 0.243f;
+                current_word = "";
                 cw_pos = -1;
             } else {
                 current_word += text_content[r][c];
                 if (cw_pos == -1) cw_pos = c;
             }
-            if (current_word == U"for" || current_word == U"if" || current_word == U"else" || current_word == U"int" || current_word == U"float" || current_word == U"boolean" || current_word == U"char" || current_word == U"public" || current_word == U"static" || current_word == U"void") {
-                green = 0.3f;
-                blue = 0.3f;
+            if (current_word.length() > 0 && current_word[0] == 'S') {
+                red = 0;
+                green = 0.651f;
+                blue = 0.929f;
+            } else if (current_word == "int" || current_word == "float" || current_word == "boolean" || current_word == "char" || current_word == "void") {
+                red = 1.0f;
+                green = 0.706f;
+                blue = 0;
+            } else if (current_word == "public" || current_word == "private" || current_word == "static" || current_word == "if" || current_word == "for" || current_word == "else" || current_word == "while") {
+                red = 0.965f;
+                green = 0.318f;
+                blue = 0.114f;
             }
-            if (current_word.find_first_not_of(U"0123456789") == std::u32string::npos && current_word.length() > 0) {
-                green = 0.6f;
-                blue = 0.3f;
+            if (current_word.find_first_not_of("0123456789") == std::string::npos && current_word.length() > 0) {
+                red = 0;
+                green = 0.651f;
+                blue = 0.929f;
             }
             if (current_word.length() > 0 && cw_pos != -1) {
                 for (int i = 0; i < current_word.length() - 1; i++) {

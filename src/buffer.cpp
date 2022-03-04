@@ -8,21 +8,21 @@
 #include "utf8.h"
 
 namespace {
-constexpr bool is_quote(char32_t character) { return character == U'"' || character == U'\''; }
+constexpr bool is_quote(char character) { return character == '"' || character == '\''; }
 
-constexpr bool is_bracket(char32_t character) { return character == U'(' || character == U'{' || character == U'['; }
+constexpr bool is_bracket(char character) { return character == '(' || character == '{' || character == '['; }
 
-constexpr bool is_closing_bracket(char32_t character) { return character == U')' || character == U'}' || character == U']'; }
+constexpr bool is_closing_bracket(char character) { return character == ')' || character == '}' || character == ']'; }
 
-constexpr char32_t corresponding_bracket(char32_t bracket) { return bracket == U'(' ? ')' : bracket + 2; }
+constexpr char corresponding_bracket(char bracket) { return bracket == '(' ? ')' : bracket + 2; }
 
-constexpr bool is_container(char32_t character) {
-    return character == U'(' || character == U'{' || character == U'[' || character == U'"' || character == U'\'';
+constexpr bool is_container(char character) {
+    return character == '(' || character == '{' || character == '[' || character == '"' || character == '\'';
 }
 
-constexpr bool is_closing_container(char32_t character) { return is_quote(character) || is_closing_bracket(character); }
+constexpr bool is_closing_container(char character) { return is_quote(character) || is_closing_bracket(character); }
 
-constexpr char32_t corresponding_container(char32_t character) {
+constexpr char corresponding_container(char character) {
     return is_quote(character) ? character : corresponding_bracket(character);
 }
 } // namespace
@@ -38,7 +38,7 @@ buffer::buffer(const std::string& filepath) : file_path(filepath) {
 
     std::string line;
     while (std::getline(f, line)) {
-        content.push_back(utf8::utf8to32(line));
+        content.push_back(line);
     }
 
     f.close();
@@ -48,9 +48,9 @@ buffer::buffer(const std::string& filepath) : file_path(filepath) {
     }
 }
 
-void buffer::enter_char(char32_t new_char) {
+void buffer::enter_char(char new_char) {
     if (selection_start == std::nullopt) {
-        std::u32string insertion;
+        std::string insertion;
         if (is_closing_container(new_char) && content[cursor.row].size() > cursor.col &&
             content[cursor.row][cursor.col] == new_char) {
             insertion = {};
@@ -77,14 +77,14 @@ void buffer::enter_char(char32_t new_char) {
 }
 
 void buffer::new_line() {
-    int indent_pos = content[cursor.row].find_first_not_of(U' ');
+    int indent_pos = content[cursor.row].find_first_not_of(' ');
     indent_pos = indent_pos == -1 ? content[cursor.row].size() : indent_pos;
-    std::u32string indent;
-    indent.insert(0, indent_pos, U' ');
+    std::string indent;
+    indent.insert(0, indent_pos, ' ');
     content.insert(content.begin() + cursor.row + 1, indent + content[cursor.row].substr(cursor.col));
     content[cursor.row].erase(content[cursor.row].begin() + cursor.col, content[cursor.row].end());
-    if (cursor.col > 0 && content[cursor.row][cursor.col - 1] == U'{' && content[cursor.row + 1][indent_pos] == U'}') {
-        content.insert(content.begin() + cursor.row + 1, indent + U"    ");
+    if (cursor.col > 0 && content[cursor.row][cursor.col - 1] == '{' && content[cursor.row + 1][indent_pos] == '}') {
+        content.insert(content.begin() + cursor.row + 1, indent + "    ");
         cursor.col = content[cursor.row + 1].size();
     } else {
         cursor.col = indent_pos;
@@ -93,19 +93,19 @@ void buffer::new_line() {
 }
 
 void buffer::indent() {
-    int indent_pos = content[cursor.row].find_first_not_of(U' ');
+    int indent_pos = content[cursor.row].find_first_not_of(' ');
     indent_pos = indent_pos == -1 ? content[cursor.row].size() : indent_pos;
-    std::u32string indent = U"";
+    std::string indent = "";
     int to_insert = indent_pos == 0 ? 4 : 4 - indent_pos % 4;
-    indent.insert(0, to_insert, U' ');
+    indent.insert(0, to_insert, ' ');
     content[cursor.row].insert(cursor.col, indent);
     cursor.col += to_insert;
 }
 
 bool buffer::unindent() {
-    int indent_pos = content[cursor.row].find_first_not_of(U' ', cursor.col);
+    int indent_pos = content[cursor.row].find_first_not_of(' ', cursor.col);
     indent_pos = indent_pos == -1 ? content[cursor.row].size() : indent_pos;
-    if (indent_pos > 0 && indent_pos % 4 == 0 && content[cursor.row].substr(indent_pos - 4, 4) == U"    ") {
+    if (indent_pos > 0 && indent_pos % 4 == 0 && content[cursor.row].substr(indent_pos - 4, 4) == "    ") {
         content[cursor.row].erase(indent_pos - 4, 4);
         cursor.col = cursor.col < 4 ? 0 : cursor.col - 4;
         return true;
@@ -228,7 +228,7 @@ void buffer::save() {
     f.open(file_path.value());
     std::string out;
     for (const line& l : content) {
-        out += utf8::utf32to8(l) + "\n";
+        out += l + "\n";
     }
     f << out;
 
