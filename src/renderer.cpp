@@ -273,20 +273,20 @@ std::vector<text_vertex> renderer::generate_batched_vertices(const text& text_co
                 } else {
                     quote_active = true;
                 }
-                red = 0;
-                green = 0.651f;
-                blue = 0.929f;
+                red = 1.0f;
+                green = 0.286f;
+                blue = 0.62f;
             } else if (quote_active) {
-                red = 0.498f;
-                green = 0.722f;
-                blue = 0;
+                red = 0.824f;
+                green = 0.392f;
+                blue = 0.714f;
             } else if (text_content[r][c] == ' ' || text_content[r][c] == ';' || text_content[r][c] == '(' || text_content[r][c] == ')') {
                 current_word = "";
                 cw_pos = -1;
             } else if (text_content[r][c] == '+' || text_content[r][c] == '-' || text_content[r][c] == '=' || text_content[r][c] == '%' || text_content[r][c] == '<') {
-                red = 0.961f;
-                green = 0.365f;
-                blue = 0.243f;
+                red = 0.467f;
+                green = 0.608f;
+                blue = 0.906f;
                 current_word = "";
                 cw_pos = -1;
             } else {
@@ -294,22 +294,22 @@ std::vector<text_vertex> renderer::generate_batched_vertices(const text& text_co
                 if (cw_pos == -1) cw_pos = c;
             }
             if (current_word.length() > 0 && current_word[0] == 'S') {
-                red = 0;
-                green = 0.651f;
-                blue = 0.929f;
-            } else if (current_word == "int" || current_word == "float" || current_word == "boolean" || current_word == "char" || current_word == "void") {
                 red = 1.0f;
-                green = 0.706f;
-                blue = 0;
-            } else if (current_word == "public" || current_word == "private" || current_word == "static" || current_word == "if" || current_word == "for" || current_word == "else" || current_word == "while") {
-                red = 0.965f;
-                green = 0.318f;
-                blue = 0.114f;
+                green = 0.286f;
+                blue = 0.62f;
+            } else if (current_word == "int" || current_word == "float" || current_word == "boolean" || current_word == "char" || current_word == "void") {
+                red = 0.286f;
+                green = 0.714f;
+                blue = 1.0f;
+            } else if (current_word == "class" || current_word == "public" || current_word == "private" || current_word == "static" || current_word == "if" || current_word == "for" || current_word == "else" || current_word == "while") {
+                red = 0.824f;
+                green = 0.392f;
+                blue = 0.714f;
             }
             if (current_word.find_first_not_of("0123456789") == std::string::npos && current_word.length() > 0) {
-                red = 0;
-                green = 0.651f;
-                blue = 0.929f;
+                red = 0.643f;
+                green = 0.502f;
+                blue = 0.812f;
             }
             if (current_word.length() > 0 && cw_pos != -1) {
                 for (int i = 0; i < current_word.length() - 1; i++) {
