@@ -7,6 +7,7 @@
 #include "project.h"
 #include "classdiagram.h"
 #include "editor.h"
+#include "runner.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -22,7 +23,7 @@ public:
 
 private slots:
     void on_newClassButton_clicked();
-    void on_classOpened();
+    void on_classOpened(QString classPath);
 
 private:
     Ui::MainWindow *ui;
@@ -32,6 +33,8 @@ private:
     ClassDiagramEmitter *classDiagramEmitter;
 
     Editor* editor;
+
+    Runner* runner;
 
     Project currentProject;
 };

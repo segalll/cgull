@@ -25,14 +25,19 @@ MainWindow::MainWindow(QWidget *parent)
 
     currentProject.create("testing", "/Users/hsegal/Documents/testing");
 
+    runner = new Runner("/Users/hsegal/Documents/testing/");
+
     QDir projectDir(currentProject.getPath().c_str());
     QStringList classes = projectDir.entryList(QStringList() << "*.java", QDir::Files);
     foreach (QString filename, classes)
     {
         const std::string className = filename.split(".java")[0].toStdString();
         currentProject.addClass(className);
-        scene->addItem(new ClassEntry(className.c_str(), classDiagramEmitter));
+        scene->addItem(new ClassEntry(className.c_str(), "/Users/hsegal/Documents/testing/" + filename, classDiagramEmitter, runner));
     }
+
+    QMenu* m = menuBar()->addMenu("File");
+    m->addAction("Open Project...");
 }
 
 MainWindow::~MainWindow()
@@ -45,14 +50,19 @@ void MainWindow::on_newClassButton_clicked()
     CreateClassDialog* dialog = new CreateClassDialog;
 
     if (dialog->exec() == QDialog::Accepted) {
-        ClassEntry *newClass = new ClassEntry(dialog->getClassName(), classDiagramEmitter);
+        ClassEntry *newClass = new ClassEntry(dialog->getClassName(), "/Users/hsegal/Documents/testing/" + dialog->getClassName() + ".java", classDiagramEmitter, runner);
         scene->addItem(newClass);
         currentProject.createClass(dialog->getClassName().toStdString());
     }
 }
 
-void MainWindow::on_classOpened()
+void MainWindow::on_classOpened(QString classPath)
 {
-    editor = new Editor;
-    editor->show();
+    if (editor == nullptr) {
+        editor = new Editor;
+    }
+    if (!editor->isVisible()) {
+        editor->show();
+    }
+    editor->openClassFromGUI(classPath);
 }

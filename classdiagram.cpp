@@ -1,10 +1,12 @@
 #include "classdiagram.h"
 
+#include <QFile>
 #include <QGraphicsSceneHoverEvent>
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
+#include <QMenu>
 
-ClassEntry::ClassEntry(QString className, ClassDiagramEmitter *emitter) : className(className), emitter(emitter)
+ClassEntry::ClassEntry(QString className, QString classPath, ClassDiagramEmitter *emitter, Runner *runner) : className(className), classPath(classPath), emitter(emitter), runner(runner)
 {
     setAcceptHoverEvents(true);
 }
@@ -52,8 +54,26 @@ void ClassEntry::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 {
     if (contains(event->pos()))
     {
-        emit emitter->classOpened(className);
+        emit emitter->classOpened(classPath);
     }
+}
+
+void ClassEntry::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
+    QMenu* m = new QMenu;
+    m->addAction("void main(String[] args)", [this]() {
+        runner->show();
+        runner->run(className);
+    });
+    QAction* d = new QAction("Delete");
+    d->connect(d, &QAction::triggered, [this]() {
+        QFile::remove(classPath);
+        QFile::remove(classPath.chopped(5) + ".class");
+        delete this;
+    });
+    m->addAction(d);
+    m->setDefaultAction(d);
+    m->setStyleSheet("QMenu::item:default { color: #ff3333; }");
+    m->exec(event->screenPos());
 }
 
 QRectF ClassEntry::boundingRect() const

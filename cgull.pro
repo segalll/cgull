@@ -15,14 +15,16 @@ SOURCES += \
     editor.cpp \
     main.cpp \
     mainwindow.cpp \
-    project.cpp
+    project.cpp \
+    runner.cpp
 
 HEADERS += \
     classdiagram.h \
     createclassdialog.h \
     editor.h \
     mainwindow.h \
-    project.h
+    project.h \
+    runner.h
 
 FORMS += \
     mainwindow.ui
