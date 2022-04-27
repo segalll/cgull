@@ -49,8 +49,11 @@ Editor::Editor() {
     m_renderData.xOffset = 60.0f;
     m_renderData.yOffset = 70.0f;
 
+    setCursor(Qt::IBeamCursor);
+
     QPushButton* p = new QPushButton("Compile", this);
     p->setGeometry(20, 35, 75, 35);
+    p->setCursor(Qt::ArrowCursor);
     p->show();
 
     connect(p, &QPushButton::clicked, this, [this]() {
@@ -59,6 +62,7 @@ Editor::Editor() {
 
     m_fileTabBar = new QTabBar(this);
     m_fileTabBar->setGeometry(5, 5, 790, 20);
+    m_fileTabBar->setCursor(Qt::ArrowCursor);
     m_fileTabBar->setExpanding(true);
     m_fileTabBar->setTabsClosable(true);
     m_fileTabBar->addTab("untitled");
@@ -259,6 +263,10 @@ void Editor::keyPressEvent(QKeyEvent* ev) {
         copy();
     } else if (ev->matches(QKeySequence::Paste)) {
         paste();
+    } else if (ev->matches(QKeySequence::Undo)) {
+        undo();
+    } else if (ev->matches(QKeySequence::Redo)) {
+        redo();
     } else if (ev->text().length() > 0) {
         enterStr(ev->text().toStdString());
         lint();
@@ -373,7 +381,7 @@ void Editor::renderError() {
     for (const auto& l : m_lints) {
         float startX = properCursorPos(l.pos.col, l.pos.row);
         float endX = properCursorPos(l.pos.col + 1, l.pos.row);
-        float y = m_fontData.height * (l.pos.row + 1) + m_renderData.yOffset;
+        float y = m_fontData.height * (l.pos.row + 1) + m_renderData.yOffset + 2.0f;
 
         errorVertices.insert(errorVertices.end(), {
             endX, y,
@@ -488,7 +496,6 @@ void Editor::renderLineNumbers() {
         50.0f, (float)m_renderData.height,
         50.0f, 0.0f
     };
-
     c.vao.bind();
     c.shader.bind();
     float shade = m_currentFileCompiles ? 0.15f : 0.3f;
@@ -528,6 +535,7 @@ void Editor::enterStr(const std::string& str) {
         } else if (isContainer(str[0])) {
             insertion += correspondingContainer(str[0]);
         }
+
         m_textBuffer[m_cursorState.pos.row].insert(m_cursorState.pos.col, insertion);
         m_cursorState.pos.col += str.length();
     } else {
@@ -731,11 +739,29 @@ void Editor::paste() {
 
     QStringList content = c->text().split('\n');
     for (int i = 0; i < content.count(); i++) {
-        enterStr(content[i].toStdString());
-        if (i + 1 < content.count()) {
-            newLine();
+        std::string str = content[i].toStdString();
+
+        if (m_cursorState.selectionStart != std::nullopt) {
+            deleteSelection();
         }
+
+        if (i != 0) {
+            m_textBuffer.insert(m_textBuffer.begin() + m_cursorState.pos.row, str);
+        } else {
+            m_textBuffer[m_cursorState.pos.row].insert(m_cursorState.pos.col, str);
+        }
+        m_cursorState.pos.row += 1;
     }
+    m_cursorState.pos.row -= 1;
+    m_cursorState.pos.col = m_textBuffer[m_cursorState.pos.row].size();
+}
+
+void Editor::undo() {
+
+}
+
+void Editor::redo() {
+
 }
 
 void Editor::save(QString fileName) {

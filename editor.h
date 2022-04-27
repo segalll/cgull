@@ -64,7 +64,6 @@ struct Coord {
     unsigned int row = 0;
     unsigned int col = 0;
 };
-
 inline bool operator==(const Coord& a, const Coord& b) {
     return a.row == b.row && a.col == b.col;
 }
@@ -128,6 +127,8 @@ public:
     void selectAll();
     void copy();
     void paste();
+    void undo();
+    void redo();
 
     void save(QString fileName);
     void saveTemp();
