@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file alias="checked_radio_button.png">images/checked_radio_button.png</file>
+        <file alias="unchecked_radio_button.png">images/unchecked_radio_button.png</file>
+    </qresource>
+</RCC>
