@@ -785,7 +785,7 @@ void Editor::saveTemp() {
 }
 
 void Editor::compile(QString fileName) {
-    if (m_lintProcess->state() != QProcess::ProcessState::NotRunning) return;
+    if (m_compileProcess->state() != QProcess::ProcessState::NotRunning) return;
 
     save(fileName);
 
