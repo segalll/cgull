@@ -16,8 +16,6 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-#include <iostream>
-
 namespace {
 constexpr bool isQuote(char character) { return character == '"' || character == '\''; }
 
@@ -28,7 +26,7 @@ constexpr bool isClosingBracket(char character) { return character == ')' || cha
 constexpr char correspondingBracket(char bracket) { return bracket == '(' ? ')' : bracket + 2; }
 
 constexpr bool isContainer(char character) {
-    return character == '(' || character == '{' || character == '[' || character == '"' || character == '\'';
+    return isBracket(character) || character == '"' || character == '\'';
 }
 
 constexpr bool isClosingContainer(char character) { return isQuote(character) || isClosingBracket(character); }
@@ -287,6 +285,7 @@ void Editor::mousePressEvent(QMouseEvent* ev) {
 }
 
 void Editor::mouseReleaseEvent(QMouseEvent* ev) {
+    Q_UNUSED(ev);
     m_cursorState.mouseDown = false;
 }
 
@@ -965,7 +964,7 @@ void Editor::loadFontGlyphs() {
     unsigned int charCode = FT_Get_First_Char(face, &gIndex);
     while (gIndex != 0) {
         if (FT_Load_Char(face, charCode, FT_LOAD_RENDER)) {
-            std::cout << "Failed to load glyph\n";
+            qDebug() << "Failed to load glyph\n";
             charCode = FT_Get_Next_Char(face, charCode, &gIndex);
             continue;
         }
