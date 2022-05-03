@@ -3,25 +3,19 @@
 #include <QFile>
 #include <QTextStream>
 
-Project::Project()
-{
+Project::Project() {}
 
-}
-
-void Project::createClass(const std::string &className)
-{
+void Project::createClass(const QString& className) {
     addClass(className);
-    writeDefaultClass(classes.back());
+    writeDefaultClass(m_classes.back());
 }
 
-void Project::addClass(const std::string &className)
-{
-    classes.emplace_back(className, path);
+void Project::addClass(const QString& className) {
+    m_classes.emplace_back(className, m_path);
 }
 
-void Project::writeDefaultClass(Class &c)
-{
-    std::string defaultContent = "/**\n"
+void Project::writeDefaultClass(Class& c) {
+    QString defaultContent = "/**\n"
         " * Write a description of class " + c.name + " here.\n"
         " *\n"
         " * @author (your name)\n"
@@ -52,17 +46,15 @@ void Project::writeDefaultClass(Class &c)
         "    }\n"
         "}";
 
-    QTextStream out(&classes.back().file);
-    out << defaultContent.c_str();
+    QTextStream out(&m_classes.back().file);
+    out << defaultContent;
 }
 
-void Project::create(const std::string &projectName, const std::string &projectPath)
-{
-    name = projectName;
-    path = projectPath;
+void Project::create(const QString& projectName, const QString& projectPath) {
+    m_name = projectName;
+    m_path = projectPath;
 }
 
-std::string Project::getPath() const
-{
-    return path;
+QString Project::getPath() const {
+    return m_path;
 }

@@ -1,41 +1,35 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
-#include <QGraphicsScene>
-
-#include "project.h"
 #include "classdiagram.h"
 #include "editor.h"
+#include "project.h"
 #include "runner.h"
+
+#include <QGraphicsScene>
+#include <QMainWindow>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-class MainWindow : public QMainWindow
-{
+class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
 
 private slots:
-    void on_newClassButton_clicked();
-    void on_classOpened(QString classPath);
+    void createClass();
+    void openClass(QString classPath);
 
 private:
-    Ui::MainWindow *ui;
-
-    QGraphicsScene *scene;
-
-    ClassDiagramEmitter *classDiagramEmitter;
-
-    Editor* editor;
-
-    Runner* runner;
-
-    Project currentProject;
+    Ui::MainWindow* m_ui;
+    QGraphicsScene* m_scene;
+    ClassDiagramEmitter* m_classDiagramEmitter;
+    Editor* m_editor;
+    Runner* m_runner;
+    Project m_currentProject;
 };
 #endif // MAINWINDOW_H

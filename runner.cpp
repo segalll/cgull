@@ -1,6 +1,6 @@
 #include "runner.h"
 
-Runner::Runner(QString projectPath) : projectPath(projectPath) {
+Runner::Runner(QString projectPath) : m_projectPath(projectPath) {
     setReadOnly(true);
 
     m_runProcess = new QProcess(this);
@@ -12,7 +12,7 @@ Runner::Runner(QString projectPath) : projectPath(projectPath) {
 void Runner::run(QString fileName) {
     if (m_runProcess->state() != QProcess::ProcessState::NotRunning) return;
 
-    m_runProcess->start("java", QStringList() << "-classpath" << projectPath << fileName);
+    m_runProcess->start("java", QStringList() << "-classpath" << m_projectPath << fileName);
 }
 
 void Runner::textOutputted() {

@@ -4,8 +4,7 @@
 #include <QPlainTextEdit>
 #include <QProcess>
 
-class Runner : public QPlainTextEdit
-{
+class Runner : public QPlainTextEdit {
     Q_OBJECT
 public:
     Runner(QString projectPath);
@@ -16,7 +15,7 @@ private slots:
     void textOutputted();
 
 private:
-    QString projectPath;
+    QString m_projectPath;
     QProcess* m_runProcess;
 };
 

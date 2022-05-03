@@ -64,6 +64,7 @@ struct Coord {
     unsigned int row = 0;
     unsigned int col = 0;
 };
+
 inline bool operator==(const Coord& a, const Coord& b) {
     return a.row == b.row && a.col == b.col;
 }
@@ -90,8 +91,7 @@ struct EditorState {
     bool currentFileCompiles;
 };
 
-class Editor : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core
-{
+class Editor : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core {
     Q_OBJECT
 public:
     Editor();

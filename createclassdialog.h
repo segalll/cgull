@@ -1,19 +1,18 @@
 #ifndef CREATECLASSDIALOG_H
 #define CREATECLASSDIALOG_H
 
+#include <QComboBox>
 #include <QDialog>
 #include <QLineEdit>
-#include <QComboBox>
 
-class CreateClassDialog : public QDialog
-{
+class CreateClassDialog : public QDialog {
 public:
-    explicit CreateClassDialog(QWidget *parent = nullptr);
+    explicit CreateClassDialog(QWidget* parent = nullptr);
     QString getClassName() const;
     QString getClassType() const;
 private:
-    QLineEdit *nameInput;
-    QComboBox *typeComboBox;
+    QLineEdit* m_nameInput;
+    QComboBox* m_typeComboBox;
 };
 
 #endif // CREATECLASSDIALOG_H

@@ -2,18 +2,18 @@
 #define PROJECT_H
 
 #include <QFile>
-#include <vector>
+
 #include <list>
-#include <string>
 #include <memory>
+#include <vector>
 
 struct Class {
-    std::string name;
+    QString name;
     QFile file;
     std::vector<std::unique_ptr<Class>> dependencies;
 
-    Class(std::string name, std::string projectPath) : name(name) {
-        file.setFileName((projectPath + "/" + name + ".java").c_str());
+    Class(QString name, QString projectPath) : name(name) {
+        file.setFileName(projectPath + "/" + name + ".java");
         file.open(QIODevice::ReadWrite | QIODevice::Text);
     }
 };
@@ -22,16 +22,15 @@ class Project
 {
 public:
     Project();
-    void createClass(const std::string &className);
-    void addClass(const std::string &className);
-    void writeDefaultClass(Class &c);
-    void create(const std::string &projectName, const std::string &projectPath);
-    std::string getPath() const;
+    void createClass(const QString& className);
+    void addClass(const QString& className);
+    void writeDefaultClass(Class& c);
+    void create(const QString& projectName, const QString& projectPath);
+    QString getPath() const;
 private:
-    std::list<Class> classes;
-    std::string name;
-    std::string path;
-
+    std::list<Class> m_classes;
+    QString m_name;
+    QString m_path;
 };
 
 #endif // PROJECT_H
