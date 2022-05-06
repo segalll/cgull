@@ -8,6 +8,7 @@
 
 ClassEntry::ClassEntry(QString className, QString classPath, ClassDiagramEmitter* emitter, Runner* runner) : m_className(className), m_classPath(classPath), m_emitter(emitter), m_runner(runner) {
     setAcceptHoverEvents(true);
+    setData(0, className);
 }
 
 void ClassEntry::hoverEnterEvent(QGraphicsSceneHoverEvent* event) {
@@ -60,6 +61,7 @@ void ClassEntry::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     d->connect(d, &QAction::triggered, [this]() {
         QFile::remove(m_classPath);
         QFile::remove(m_classPath.chopped(5) + ".class");
+        emit m_emitter->classClosed(m_className);
         delete this;
     });
     m->addAction(d);

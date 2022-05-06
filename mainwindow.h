@@ -23,6 +23,8 @@ public:
 private slots:
     void createClass();
     void openClass(QString classPath);
+    void closeClass(QString className);
+    void save();
 
 private:
     Ui::MainWindow* m_ui;

@@ -292,10 +292,15 @@ void Editor::mouseReleaseEvent(QMouseEvent* ev) {
 // PLEASE REFACTOR THIS FUNCTION
 void Editor::mouseDoubleClickEvent(QMouseEvent* ev) {
     Coord c = mouseToCursorPos(ev->position().x(), ev->position().y());
+    if (m_textBuffer[c.row].size() == 0) return;
+    if (c.col >= m_textBuffer[c.row].size()) { // catherine is so cool and awesome henry is kinda cool I guess...
+        c.col--;
+    }
     if (std::isalnum(m_textBuffer[c.row][c.col]) || m_textBuffer[c.row][c.col] == '_') {
         m_cursorState.selectionStart = Coord { c.row, 0 };
         for (int i = c.col - 1; i >= 0; i--) {
             if (!std::isalnum(m_textBuffer[c.row][i]) && m_textBuffer[c.row][i] != '_') {
+                qDebug() << i;
                 m_cursorState.selectionStart = Coord { c.row, static_cast<unsigned int>(i + 1) };
                 break;
             }
@@ -347,6 +352,27 @@ void Editor::mouseMoveEvent(QMouseEvent* ev) {
 void Editor::wheelEvent(QWheelEvent* ev) {
     m_renderData.scroll -= ev->pixelDelta().y();
     update(); // schedule redraw
+}
+
+void Editor::closeEvent(QCloseEvent* ev) {
+    for (int i = 0; i < m_fileTabBar->count(); i++) {
+         m_fileTabBar->removeTab(0);
+    }
+
+    m_bufferCache.erase(m_currentFileName);
+
+    m_cursorState = CursorState {
+        { 0, 0 }, // cursor coord
+        std::nullopt, // selection start
+        false // mouse down
+    };
+    m_currentFileCompiles = true;
+    m_currentFileName = "untitled";
+    m_fileTabBar->addTab("untitled");
+    m_textBuffer = {""};
+    m_lints.clear();
+
+    update();
 }
 
 void Editor::renderText() {
@@ -888,6 +914,15 @@ void Editor::openClassFromGUI(QString path) {
     m_bufferCache[m_currentFileName] = { m_textBuffer, m_cursorState, m_renderData.scroll, m_currentFileCompiles };
 
     loadFile(path);
+}
+
+void Editor::closeClass(QString className) {
+    for (int i = 0; i < m_fileTabBar->count(); i++) {
+        if (m_fileTabBar->tabText(i) == className + ".java") {
+            tabClosed(i);
+            return;
+        }
+    }
 }
 
 constexpr float Editor::properCursorPos(unsigned int x, unsigned int y) {

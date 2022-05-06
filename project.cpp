@@ -5,6 +5,14 @@
 
 Project::Project() {}
 
+Project::Project(const QString& projectName, const QString& projectLocation) {
+    m_path = projectLocation + projectName + "/";
+}
+
+Project::Project(const QString& projectPath) {
+    m_path = projectPath;
+}
+
 void Project::createClass(const QString& className) {
     addClass(className);
     writeDefaultClass(m_classes.back());
@@ -46,13 +54,8 @@ void Project::writeDefaultClass(Class& c) {
         "    }\n"
         "}";
 
-    QTextStream out(&m_classes.back().file);
+    QTextStream out(&c.file);
     out << defaultContent;
-}
-
-void Project::create(const QString& projectName, const QString& projectPath) {
-    m_name = projectName;
-    m_path = projectPath;
 }
 
 QString Project::getPath() const {

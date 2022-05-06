@@ -9,6 +9,7 @@ class ClassDiagramEmitter : public QObject {
     Q_OBJECT
 signals:
     void classOpened(QString classPath);
+    void classClosed(QString className);
 };
 
 class ClassEntry : public QGraphicsItem {

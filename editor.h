@@ -107,6 +107,7 @@ public:
     void mouseDoubleClickEvent(QMouseEvent* ev) override;
     void mouseMoveEvent(QMouseEvent* ev) override;
     void wheelEvent(QWheelEvent* ev) override;
+    void closeEvent(QCloseEvent* ev) override;
 
     void renderText();
     void renderError();
@@ -137,6 +138,7 @@ public:
 
     void loadFile(QString path);
     void openClassFromGUI(QString path);
+    void closeClass(QString className);
 
     constexpr float properCursorPos(unsigned int x, unsigned int y);
     constexpr float maxScroll();
