@@ -355,6 +355,8 @@ void Editor::wheelEvent(QWheelEvent* ev) {
 }
 
 void Editor::closeEvent(QCloseEvent* ev) {
+    Q_UNUSED(ev);
+
     for (int i = 0; i < m_fileTabBar->count(); i++) {
          m_fileTabBar->removeTab(0);
     }
