@@ -1,16 +1,14 @@
 #include "project.h"
 
+#include <QDir>
 #include <QFile>
+#include <QPoint>
 #include <QTextStream>
 
 Project::Project() {}
 
-Project::Project(const QString& projectName, const QString& projectLocation) {
-    m_path = projectLocation + projectName + "/";
-}
-
 Project::Project(const QString& projectPath) {
-    m_path = projectPath;
+    m_path = QDir::cleanPath(projectPath);
 }
 
 void Project::createClass(const QString& className) {
@@ -56,6 +54,43 @@ void Project::writeDefaultClass(Class& c) {
 
     QTextStream out(&c.file);
     out << defaultContent;
+}
+
+void Project::create(const QString& projectPath) {
+    QDir dir;
+    m_path = QDir::cleanPath(projectPath);
+    if (!dir.exists(m_path)) {
+        dir.mkpath(m_path);
+    }
+
+    QFile f(m_path + "/package.cgull");
+    f.open(QFile::WriteOnly);
+}
+
+void Project::writeProjectFile(const QString& contents) {
+    QFile f(m_path + "/package.cgull");
+    f.open(QFile::WriteOnly);
+    f.write(contents.toUtf8());
+}
+
+QMap<QString, QPoint> Project::getClassPositions() const {
+    QMap<QString, QPoint> m;
+
+    QFile f(m_path + "/package.cgull");
+    f.open(QFile::ReadOnly);
+    QString currentClass;
+
+    QTextStream in(&f);
+    while (!in.atEnd()) {
+        QString l = in.readLine();
+        if (l.startsWith("--")) {
+            currentClass = l.last(l.count() - 2);
+        } else {
+            QPoint p(l.split(' ')[0].toInt(), l.split(' ')[1].toInt());
+            m[currentClass] = p;
+        }
+    }
+    return m;
 }
 
 QString Project::getPath() const {

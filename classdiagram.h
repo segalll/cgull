@@ -10,6 +10,7 @@ class ClassDiagramEmitter : public QObject {
 signals:
     void classOpened(QString classPath);
     void classClosed(QString className);
+    void classMoved(QString className, QPoint pos);
 };
 
 class ClassEntry : public QGraphicsItem {

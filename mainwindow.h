@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include "classdiagram.h"
+#include "createprojectdialog.h"
 #include "editor.h"
 #include "project.h"
 #include "runner.h"
@@ -20,11 +21,14 @@ public:
     MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
 
+    void loadProject();
+
 private slots:
     void createClass();
     void openClass(QString classPath);
     void closeClass(QString className);
     void save();
+    void projectCreated();
 
 private:
     Ui::MainWindow* m_ui;
@@ -33,5 +37,6 @@ private:
     Editor* m_editor;
     Runner* m_runner;
     Project m_currentProject;
+    CreateProjectDialog* m_createProjectDialog;
 };
 #endif // MAINWINDOW_H

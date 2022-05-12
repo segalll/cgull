@@ -22,11 +22,13 @@ class Project
 {
 public:
     Project();
-    Project(const QString& projectName, const QString& projectLocation);
     Project(const QString& projectPath);
     void createClass(const QString& className);
     void addClass(const QString& className);
     void writeDefaultClass(Class& c);
+    void create(const QString& projectPath);
+    void writeProjectFile(const QString& contents);
+    QMap<QString, QPoint> getClassPositions() const;
     QString getPath() const;
 private:
     std::list<Class> m_classes;

@@ -42,6 +42,7 @@ void ClassEntry::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
     if (event->buttons() & Qt::LeftButton) {
         const QPointF delta = event->pos() - m_lastClickPos;
         moveBy(roundToMultiple(delta.x(), 10), roundToMultiple(delta.y(), 10));
+        emit m_emitter->classMoved(m_className, pos().toPoint());
     }
 }
 

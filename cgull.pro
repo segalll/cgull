@@ -12,6 +12,7 @@ CONFIG += sdk_no_version_check
 SOURCES += \
     classdiagram.cpp \
     createclassdialog.cpp \
+    createprojectdialog.cpp \
     editor.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -21,6 +22,7 @@ SOURCES += \
 HEADERS += \
     classdiagram.h \
     createclassdialog.h \
+    createprojectdialog.h \
     editor.h \
     mainwindow.h \
     project.h \
