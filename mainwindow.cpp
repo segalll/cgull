@@ -67,7 +67,7 @@ void MainWindow::loadProject() {
     foreach (QString filename, classes) {
         const QString className = filename.split(".java")[0];
         m_currentProject.addClass(className);
-        m_scene->addItem(new ClassEntry(className, m_currentProject.getPath() + filename, m_classDiagramEmitter, m_runner));
+        m_scene->addItem(new ClassEntry(className, QDir::cleanPath(m_currentProject.getPath() + "/" + filename), m_classDiagramEmitter, m_runner));
     }
     QMap<QString, QPoint> classPositions = m_currentProject.getClassPositions();
     for (QGraphicsItem* c : m_scene->items()) {
