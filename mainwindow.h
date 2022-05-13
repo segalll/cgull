@@ -27,6 +27,7 @@ private slots:
     void createClass();
     void openClass(QString classPath);
     void closeClass(QString className);
+    void compile();
     void save();
     void projectCreated();
 

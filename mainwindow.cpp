@@ -18,7 +18,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), m_ui(new Ui::Main
     m_ui->graphicsView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_ui->graphicsView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-    QObject::connect(m_ui->newClassButton, &QPushButton::clicked, this, &MainWindow::createClass);
+    connect(m_ui->newClassButton, &QPushButton::clicked, this, &MainWindow::createClass);
+    connect(m_ui->compileButton, &QPushButton::clicked, this, &MainWindow::compile);
 
     m_classDiagramEmitter = new ClassDiagramEmitter;
     connect(m_classDiagramEmitter, &ClassDiagramEmitter::classOpened, this, &MainWindow::openClass);
@@ -96,6 +97,13 @@ void MainWindow::openClass(QString classPath) {
 
 void MainWindow::closeClass(QString className) {
     m_editor->closeClass(className);
+}
+
+void MainWindow::compile() {
+    // this is a little hacky, maybe add class list somewhere
+    for (QGraphicsItem* c : m_scene->items()) { // means of iterating over class names
+        m_editor->compilePotentiallyClosed(c->data(0).toString() + ".java");
+    }
 }
 
 void MainWindow::save() {

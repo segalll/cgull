@@ -261,10 +261,16 @@ void Editor::keyPressEvent(QKeyEvent* ev) {
         copy();
     } else if (ev->matches(QKeySequence::Paste)) {
         paste();
+        lint();
+        m_currentFileCompiles = false;
     } else if (ev->matches(QKeySequence::Undo)) {
         undo();
+        lint();
+        m_currentFileCompiles = false;
     } else if (ev->matches(QKeySequence::Redo)) {
         redo();
+        lint();
+        m_currentFileCompiles = false;
     } else if (ev->text().length() > 0) {
         enterStr(ev->text().toStdString());
         lint();
@@ -357,8 +363,8 @@ void Editor::wheelEvent(QWheelEvent* ev) {
 void Editor::closeEvent(QCloseEvent* ev) {
     Q_UNUSED(ev);
 
-    for (int i = 0; i < m_fileTabBar->count(); i++) {
-         m_fileTabBar->removeTab(0);
+    for (int i = 0; i <= m_fileTabBar->count(); i++) { // <= instead of < because untitled is created on tab close in tabClosed()
+        m_fileTabBar->removeTab(0);
     }
 
     m_bufferCache.erase(m_currentFileName);
@@ -717,7 +723,7 @@ void Editor::cursorUp() {
         m_cursorState.pos.col = 0;
     } else {
         m_cursorState.pos.row -= 1;
-        m_cursorState.pos.col = m_textBuffer[m_cursorState.pos.row].length();
+        m_cursorState.pos.col = qMin(m_textBuffer[m_cursorState.pos.row].length(), m_cursorState.pos.col);
     }
 }
 
@@ -820,6 +826,19 @@ void Editor::compile(QString fileName) {
     m_compileProcess->start("javac", QStringList() << "-classpath" << m_projectPath << path);
 }
 
+void Editor::compilePotentiallyClosed(QString fileName) {
+    if (m_compileProcess->state() != QProcess::ProcessState::NotRunning) return;
+    for (int i = 0; i < m_fileTabBar->count(); i++) {
+        if (m_fileTabBar->tabText(i) == fileName) {
+            compile(fileName);
+            return;
+        }
+    }
+
+    const QString path = m_tempPath + fileName;
+    m_compileProcess->start("javac", QStringList() << "-classpath" << m_projectPath << path);
+}
+
 void Editor::compileFinished() {
     m_currentFileCompiles = m_compileProcess->readAllStandardError().size() == 0;
 
@@ -902,18 +921,26 @@ void Editor::openClassFromGUI(QString path) {
     if (m_fileTabBar->tabText(0) == "untitled") {
         m_fileTabBar->removeTab(0);
     }
+
+    const QString fileName = path.split("/").back();
+
     for (int i = 0; i < m_fileTabBar->count(); i++) {
-        if (m_fileTabBar->tabText(i) == path.split("/").back()) {
+        if (m_fileTabBar->tabText(i) == fileName) {
             m_fileTabBar->setCurrentIndex(i);
             return;
         }
     }
-    m_fileTabBar->addTab(path.split("/").back());
+    m_fileTabBar->addTab(fileName);
     m_fileTabBar->setTabData(m_fileTabBar->count() - 1, path);
     m_fileTabBar->setCurrentIndex(m_fileTabBar->count() - 1);
     m_fileTabBar->show();
 
     m_bufferCache[m_currentFileName] = { m_textBuffer, m_cursorState, m_renderData.scroll, m_currentFileCompiles };
+
+    QFileInfo f(m_tempPath + fileName);
+    if (f.exists()) {
+        path = m_tempPath + fileName;
+    }
 
     loadFile(path);
 }

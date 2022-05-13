@@ -134,6 +134,7 @@ public:
     void save(QString fileName);
     void saveTemp();
     void compile(QString fileName);
+    void compilePotentiallyClosed(QString fileName); // compile normally if file is open and from temp if file closed
     void lint();
 
     void loadFile(QString path);
