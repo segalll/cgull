@@ -88,7 +88,7 @@ struct EditorState {
     std::vector<std::string> textBuffer;
     CursorState cursorState;
     float scroll;
-    bool currentFileCompiles;
+    bool currentFileChanged;
 };
 
 class Editor : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core {
@@ -131,15 +131,16 @@ public:
     void undo();
     void redo();
 
-    void save(QString fileName);
+    void save(const QString& fileName);
     void saveTemp();
-    void compile(QString fileName);
-    void compilePotentiallyClosed(QString fileName); // compile normally if file is open and from temp if file closed
+    void compile(const QString& fileName);
+    void compilePotentiallyClosed(const QString& fileName); // compile normally if file is open and from temp if file closed
     void lint();
+    void lintDetached(const QString& fileName); // can be run with no files open in editor
 
-    void loadFile(QString path);
-    void openClassFromGUI(QString path);
-    void closeClass(QString className);
+    void loadFile(const QString& path);
+    void openClassFromGUI(const QString& path);
+    void closeClass(const QString& className);
 
     constexpr float properCursorPos(unsigned int x, unsigned int y);
     constexpr float maxScroll();
@@ -147,12 +148,16 @@ public:
     constexpr std::tuple<Coord, Coord> getSelectionEnds();
     constexpr QRect getLintHoverRegion(int index);
 
+    bool fileIsSameAsTemp(const QString& projectPath, const QString& fileName) const;
+
     void loadFontGlyphs();
     std::vector<TextVertex> generateBatchedVertices(const std::vector<std::string>& textContent);
     std::vector<TextVertex> generateLineNumberVertices();
 
+    QString getTempPath() const;
+
 signals:
-    void linted(QString className, bool errors, bool compiled);
+    void linted(QString className, bool errors, bool changed);
 
 private slots:
     void tabChanged(int tabIndex);
@@ -174,7 +179,7 @@ private:
     QString m_currentFileName;
     std::map<QString, EditorState> m_bufferCache;
     bool m_wantAnotherLint = false;
-    bool m_currentFileCompiled = false;
+    bool m_currentFileChanged = false;
 };
 
 #endif // EDITOR_H

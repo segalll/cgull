@@ -65,18 +65,18 @@ Editor::Editor() {
     m_fileTabBar->setTabsClosable(true);
     m_fileTabBar->addTab("untitled");
 
-    connect(m_fileTabBar, SIGNAL(tabBarClicked(int)), this, SLOT(tabChanged(int)));
-    connect(m_fileTabBar, SIGNAL(tabCloseRequested(int)), this, SLOT(tabClosed(int)));
+    connect(m_fileTabBar, &QTabBar::tabBarClicked, this, &Editor::tabChanged);
+    connect(m_fileTabBar, &QTabBar::tabCloseRequested, this, &Editor::tabClosed);
 
     m_compileProcess = new QProcess(this);
     m_compileProcess->setEnvironment(QProcess::systemEnvironment());
 
-    connect(m_compileProcess, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(compileFinished()));
+    connect(m_compileProcess, &QProcess::finished, this, &Editor::compileFinished);
 
     m_lintProcess = new QProcess(this);
     m_lintProcess->setEnvironment(QProcess::systemEnvironment());
 
-    connect(m_lintProcess, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(lintFinished()));
+    connect(m_lintProcess, &QProcess::finished, this, &Editor::lintFinished);
 
     m_textBuffer = {""};
 
@@ -242,19 +242,19 @@ void Editor::keyPressEvent(QKeyEvent* ev) {
     } else if (ev->key() == Qt::Key_Enter || ev->key() == Qt::Key_Return) {
         newLine();
         lint();
-        m_currentFileCompiled = false;
+        m_currentFileChanged = true;
     } else if (ev->key() == Qt::Key_Tab) {
         indent();
         lint();
-        m_currentFileCompiled = false;
+        m_currentFileChanged = true;
     } else if (ev->key() == Qt::Key_Backtab) {
         unindent();
         lint();
-        m_currentFileCompiled = false;
+        m_currentFileChanged = true;
     } else if (ev->key() == Qt::Key_Backspace) {
         backspace();
         lint();
-        m_currentFileCompiled = false;
+        m_currentFileChanged = true;
     } else if (ev->matches(QKeySequence::SelectAll)) {
         selectAll();
     } else if (ev->matches(QKeySequence::Copy)) {
@@ -262,19 +262,19 @@ void Editor::keyPressEvent(QKeyEvent* ev) {
     } else if (ev->matches(QKeySequence::Paste)) {
         paste();
         lint();
-        m_currentFileCompiled = false;
+        m_currentFileChanged = true;
     } else if (ev->matches(QKeySequence::Undo)) {
         undo();
         lint();
-        m_currentFileCompiled = false;
+        m_currentFileChanged = true;
     } else if (ev->matches(QKeySequence::Redo)) {
         redo();
         lint();
-        m_currentFileCompiled = false;
+        m_currentFileChanged = true;
     } else if (ev->text().length() > 0) {
         enterStr(ev->text().toStdString());
         lint();
-        m_currentFileCompiled = false;
+        m_currentFileChanged = true;
     }
     update(); // schedule redraw hopefully
 }
@@ -306,7 +306,6 @@ void Editor::mouseDoubleClickEvent(QMouseEvent* ev) {
         m_cursorState.selectionStart = Coord { c.row, 0 };
         for (int i = c.col - 1; i >= 0; i--) {
             if (!std::isalnum(m_textBuffer[c.row][i]) && m_textBuffer[c.row][i] != '_') {
-                qDebug() << i;
                 m_cursorState.selectionStart = Coord { c.row, static_cast<unsigned int>(i + 1) };
                 break;
             }
@@ -374,7 +373,7 @@ void Editor::closeEvent(QCloseEvent* ev) {
         std::nullopt, // selection start
         false // mouse down
     };
-    m_currentFileCompiled = true;
+    m_currentFileChanged = false;
     m_currentFileName = "untitled";
     m_fileTabBar->addTab("untitled");
     m_textBuffer = {""};
@@ -531,7 +530,7 @@ void Editor::renderLineNumbers() {
     };
     c.vao.bind();
     c.shader.bind();
-    float shade = m_currentFileCompiled ? 0.15f : 0.3f;
+    float shade = m_currentFileChanged ? 0.3f : 0.15f;
     float backgroundColor[] = { shade, shade, shade, 1.0f };
     c.shader.setUniformValueArray(c.shader.uniformLocation("color"), backgroundColor, 1, 4);
     c.shader.setUniformValueArray(c.shader.uniformLocation("scroll"), scroll, 1, 2);
@@ -797,7 +796,7 @@ void Editor::redo() {
 
 }
 
-void Editor::save(QString fileName) {
+void Editor::save(const QString& fileName) {
     QFile f(m_projectPath + fileName);
     f.open(QIODevice::WriteOnly);
 
@@ -805,6 +804,8 @@ void Editor::save(QString fileName) {
     for (const std::string& l : m_textBuffer) {
         t << QString::fromStdString(l) << "\n";
     }
+
+    m_currentFileChanged = false;
 }
 
 void Editor::saveTemp() {
@@ -817,7 +818,7 @@ void Editor::saveTemp() {
     }
 }
 
-void Editor::compile(QString fileName) {
+void Editor::compile(const QString& fileName) {
     if (m_compileProcess->state() != QProcess::ProcessState::NotRunning) return;
 
     save(fileName);
@@ -826,7 +827,7 @@ void Editor::compile(QString fileName) {
     m_compileProcess->start("javac", QStringList() << "-classpath" << m_projectPath << path);
 }
 
-void Editor::compilePotentiallyClosed(QString fileName) {
+void Editor::compilePotentiallyClosed(const QString& fileName) {
     if (m_compileProcess->state() != QProcess::ProcessState::NotRunning) return;
     for (int i = 0; i < m_fileTabBar->count(); i++) {
         if (m_fileTabBar->tabText(i) == fileName) {
@@ -840,9 +841,7 @@ void Editor::compilePotentiallyClosed(QString fileName) {
 }
 
 void Editor::compileFinished() {
-    m_currentFileCompiled = m_compileProcess->readAllStandardError().size() == 0;
-
-    emit linted(m_currentFileName.chopped(5), !m_currentFileCompiled, m_currentFileCompiled);
+    emit linted(m_currentFileName.chopped(5), m_compileProcess->readAllStandardError().size() > 0, m_currentFileChanged);
 
     update();
 }
@@ -862,7 +861,7 @@ void Editor::lintFinished() {
     auto l = m_lintProcess->readAllStandardError().split('\n');
     if (l.length() == 0 || (l.length() == 1 && l[0] == "")) {
         m_lints.clear();
-        emit linted(m_currentFileName.chopped(5), false, m_currentFileCompiled);
+        emit linted(m_currentFileName.chopped(5), false, m_currentFileChanged);
     } else {
         int count = l[l.count() - 2].split(' ')[0].toInt();
         int gap = 3;
@@ -883,7 +882,7 @@ void Editor::lintFinished() {
                 .pos = { row, col }
             });
         }
-        emit linted(m_currentFileName.chopped(5), true, m_currentFileCompiled);
+        emit linted(m_currentFileName.chopped(5), true, m_currentFileChanged);
     }
 
     if (m_wantAnotherLint) {
@@ -894,7 +893,7 @@ void Editor::lintFinished() {
     update();
 }
 
-void Editor::loadFile(QString path) {
+void Editor::loadFile(const QString& path) {
     QFile f(path);
     f.open(QIODevice::ReadOnly | QIODevice::Text);
 
@@ -913,15 +912,11 @@ void Editor::loadFile(QString path) {
     m_renderData.scroll = 0.0f;
     m_lints.clear();
 
-    m_currentFileName = path.split('/').back();
-    m_projectPath = path.chopped(m_currentFileName.size());
-
     lint();
-    compile(m_currentFileName);
     update();
 }
 
-void Editor::openClassFromGUI(QString path) {
+void Editor::openClassFromGUI(const QString& path) {
     if (m_fileTabBar->tabText(0) == "untitled") {
         m_fileTabBar->removeTab(0);
     }
@@ -939,17 +934,21 @@ void Editor::openClassFromGUI(QString path) {
     m_fileTabBar->setCurrentIndex(m_fileTabBar->count() - 1);
     m_fileTabBar->show();
 
-    m_bufferCache[m_currentFileName] = { m_textBuffer, m_cursorState, m_renderData.scroll, m_currentFileCompiled };
+    m_bufferCache[m_currentFileName] = { m_textBuffer, m_cursorState, m_renderData.scroll, m_currentFileChanged };
+
+    m_currentFileName = path.split('/').back();
+    m_projectPath = path.chopped(m_currentFileName.size());
+    m_currentFileChanged = !fileIsSameAsTemp(m_projectPath, m_currentFileName);
 
     QFileInfo f(m_tempPath + fileName);
     if (f.exists()) {
-        path = m_tempPath + fileName;
+        loadFile(m_tempPath + fileName);
+    } else {
+        loadFile(path);
     }
-
-    loadFile(path);
 }
 
-void Editor::closeClass(QString className) {
+void Editor::closeClass(const QString& className) {
     for (int i = 0; i < m_fileTabBar->count(); i++) {
         if (m_fileTabBar->tabText(i) == className + ".java") {
             tabClosed(i);
@@ -1009,6 +1008,18 @@ constexpr QRect Editor::getLintHoverRegion(int index) {
     int endX = properCursorPos(m_lints[index].pos.col + 1, m_lints[index].pos.row);
     int y = m_fontData.height * m_lints[index].pos.row + m_renderData.yOffset - m_renderData.scroll;
     return QRect(startX - 10, y - 10, endX - startX + 20, m_fontData.height + 20);
+}
+
+bool Editor::fileIsSameAsTemp(const QString& projectPath, const QString& fileName) const {
+    QFile tempFile(QDir::cleanPath(m_tempPath + "/" + fileName));
+    QFile realFile(QDir::cleanPath(projectPath + "/" + fileName));
+    if (!tempFile.exists() || !realFile.exists()) {
+        return false;
+    }
+    tempFile.open(QFile::ReadOnly);
+    realFile.open(QFile::ReadOnly);
+
+    return tempFile.readAll() == realFile.readAll();
 }
 
 void Editor::loadFontGlyphs() {
@@ -1270,14 +1281,18 @@ std::vector<TextVertex> Editor::generateLineNumberVertices() {
     return v;
 }
 
+QString Editor::getTempPath() const {
+    return m_tempPath;
+}
+
 void Editor::tabChanged(int tabIndex) {
-    m_bufferCache[m_currentFileName] = { m_textBuffer, m_cursorState, m_renderData.scroll, m_currentFileCompiled };
+    m_bufferCache[m_currentFileName] = { m_textBuffer, m_cursorState, m_renderData.scroll, m_currentFileChanged };
 
     const auto& e = m_bufferCache[m_fileTabBar->tabText(tabIndex)];
     m_textBuffer = e.textBuffer;
     m_cursorState = e.cursorState;
     m_renderData.scroll = e.scroll;
-    m_currentFileCompiled = e.currentFileCompiles;
+    m_currentFileChanged = e.currentFileChanged;
     m_currentFileName = m_fileTabBar->tabText(tabIndex);
     m_lints.clear();
 
@@ -1293,7 +1308,7 @@ void Editor::tabClosed(int tabIndex) {
     m_textBuffer = e.textBuffer;
     m_cursorState = e.cursorState;
     m_renderData.scroll = e.scroll;
-    m_currentFileCompiled = e.currentFileCompiles;
+    m_currentFileChanged = e.currentFileChanged;
     m_currentFileName = m_fileTabBar->tabText(m_fileTabBar->currentIndex());
     m_lints.clear();
 

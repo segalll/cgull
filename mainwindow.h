@@ -9,6 +9,7 @@
 
 #include <QGraphicsScene>
 #include <QMainWindow>
+#include <QQueue>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -22,6 +23,7 @@ public:
     ~MainWindow();
 
     void loadProject();
+    void detectErrors(const QString& fileName);
 
 private slots:
     void createClass();
@@ -30,7 +32,8 @@ private slots:
     void compile();
     void save();
     void projectCreated();
-    void classStateChanged(QString className, bool errors, bool compiled);
+    void classStateChanged(QString className, bool errors, bool changed);
+    void errorDetectionFinished();
 
 private:
     Ui::MainWindow* m_ui;
@@ -40,5 +43,8 @@ private:
     Runner* m_runner;
     Project m_currentProject;
     CreateProjectDialog* m_createProjectDialog;
+    QProcess* m_errorDetectionProcess;
+    QString m_currentErrorDetectionClass;
+    QQueue<QString> m_errorDetectionQueue;
 };
 #endif // MAINWINDOW_H

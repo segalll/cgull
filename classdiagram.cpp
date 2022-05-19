@@ -108,7 +108,7 @@ void ClassEntry::paint(QPainter* painter, const QStyleOptionGraphicsItem* option
             QLine(105, 67, 117, 56)
         };
         painter->drawLines(errorLines);
-    } else if (!data(2).toBool()) {
+    } else if (data(2).toBool()) {
         painter->setPen(QPen(Qt::darkGray, 3));
         const static QList<QLine> uncompiledLines = {
             QLine(1, 28, 13, 16),

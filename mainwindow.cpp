@@ -37,6 +37,11 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), m_ui(new Ui::Main
     m_createProjectDialog = new CreateProjectDialog;
     connect(m_createProjectDialog, &CreateProjectDialog::accepted, this, &MainWindow::projectCreated);
 
+    m_errorDetectionProcess = new QProcess(this);
+    m_errorDetectionProcess->setEnvironment(QProcess::systemEnvironment());
+
+    connect(m_errorDetectionProcess, &QProcess::finished, this, &MainWindow::errorDetectionFinished);
+
     QMenu* m = menuBar()->addMenu("File");
     m->addAction("New Project...", [this]() {
         m_createProjectDialog->exec();
@@ -72,8 +77,11 @@ void MainWindow::loadProject() {
         m_currentProject.addClass(className);
         m_scene->addItem(new ClassEntry(className, QDir::cleanPath(m_currentProject.getPath() + "/" + filename), m_classDiagramEmitter, m_runner));
     }
+
     QMap<QString, QPoint> classPositions = m_currentProject.getClassPositions();
     for (QGraphicsItem* c : m_scene->items()) {
+        detectErrors(c->data(0).toString() + ".java");
+        c->setData(2, !m_editor->fileIsSameAsTemp(m_currentProject.getPath(), c->data(0).toString() + ".java"));
         if (classPositions.contains(c->data(0).toString())) {
             c->setPos(classPositions[c->data(0).toString()]);
         }
@@ -123,13 +131,41 @@ void MainWindow::projectCreated() {
     m_scene->clear();
 }
 
-void MainWindow::classStateChanged(QString className, bool errors, bool compiled) {
+void MainWindow::classStateChanged(QString className, bool errors, bool changed) {
     for (QGraphicsItem* p : m_scene->items()) {
         if (p->data(0).toString() == className) {
             p->setData(1, errors);
-            p->setData(2, compiled);
+            p->setData(2, changed);
             p->update();
             return;
         }
+    }
+}
+
+void MainWindow::detectErrors(const QString& fileName) {
+    if (m_errorDetectionProcess->state() != QProcess::ProcessState::NotRunning) {
+        m_errorDetectionQueue.enqueue(fileName);
+        return;
+    }
+    m_currentErrorDetectionClass = fileName.chopped(5);
+    const QString path = m_editor->getTempPath() + fileName;
+    m_errorDetectionProcess->start("javac", QStringList() << "-Xlint:all" << "-classpath" << m_currentProject.getPath() << path);
+}
+
+void MainWindow::errorDetectionFinished() {
+    auto l = m_errorDetectionProcess->readAllStandardError().split('\n');
+    bool errorsPresent = true;
+    if (l.length() == 0 || (l.length() == 1 && l[0] == "")) {
+        errorsPresent = false;
+    }
+    for (QGraphicsItem* p : m_scene->items()) {
+        if (p->data(0).toString() == m_currentErrorDetectionClass) {
+            p->setData(1, errorsPresent);
+            p->update();
+            break;
+        }
+    }
+    if (!m_errorDetectionQueue.empty()) {
+        detectErrors(m_errorDetectionQueue.dequeue());
     }
 }
