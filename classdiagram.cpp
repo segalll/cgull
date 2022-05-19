@@ -17,15 +17,13 @@ void ClassEntry::hoverEnterEvent(QGraphicsSceneHoverEvent* event) {
     update();
 }
 
-void ClassEntry::hoverLeaveEvent(QGraphicsSceneHoverEvent* event)
-{
+void ClassEntry::hoverLeaveEvent(QGraphicsSceneHoverEvent* event) {
     Q_UNUSED(event);
     m_hoverOver = false;
     update();
 }
 
-void ClassEntry::mousePressEvent(QGraphicsSceneMouseEvent* event)
-{
+void ClassEntry::mousePressEvent(QGraphicsSceneMouseEvent* event) {
     if (event->button() == Qt::LeftButton && contains(event->pos())) {
         m_lastClickPos = event->pos();
     }
@@ -72,7 +70,7 @@ void ClassEntry::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
 }
 
 QRectF ClassEntry::boundingRect() const {
-    return QRectF(0, 0, 120, 70);
+    return QRectF(0, 0, 118, 68);
 }
 
 void ClassEntry::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
@@ -82,8 +80,58 @@ void ClassEntry::paint(QPainter* painter, const QStyleOptionGraphicsItem* option
     painter->setBrush(m_hoverOver ? m_color.lighter(130) : m_color);
     painter->setRenderHint(QPainter::Antialiasing);
 
-    QRectF rect(0, 0, 120, 70);
+    QRectF rect(0, 0, 118, 68);
     painter->drawRoundedRect(rect, 4, 4, Qt::RelativeSize);
+
+    if (data(1).toBool()) {
+        painter->setPen(QPen(Qt::darkRed, 3));
+        const static QList<QLine> errorLines = {
+            QLine(1, 51, 17, 67),
+            QLine(1, 35, 33, 67),
+            QLine(1, 19, 49, 67),
+            QLine(13, 16, 65, 67),
+            QLine(29, 16, 81, 67),
+            QLine(45, 16, 97, 67),
+            QLine(61, 16, 113, 67),
+            QLine(77, 16, 117, 55),
+            QLine(93, 16, 117, 39),
+            QLine(109, 16, 117, 23),
+            QLine(1, 28, 13, 16),
+            QLine(1, 44, 29, 16),
+            QLine(1, 60, 45, 16),
+            QLine(9, 67, 61, 16),
+            QLine(25, 67, 77, 16),
+            QLine(41, 67, 93, 16),
+            QLine(57, 67, 109, 16),
+            QLine(73, 67, 117, 24),
+            QLine(89, 67, 117, 40),
+            QLine(105, 67, 117, 56)
+        };
+        painter->drawLines(errorLines);
+    } else if (!data(2).toBool()) {
+        painter->setPen(QPen(Qt::darkGray, 3));
+        const static QList<QLine> uncompiledLines = {
+            QLine(1, 28, 13, 16),
+            QLine(1, 42, 27, 16),
+            QLine(1, 56, 41, 16),
+            QLine(3, 67, 55, 16),
+            QLine(17, 67, 69, 16),
+            QLine(31, 67, 83, 16),
+            QLine(45, 67, 97, 16),
+            QLine(59, 67, 111, 16),
+            QLine(73, 67, 117, 24),
+            QLine(87, 67, 117, 38),
+            QLine(101, 67, 117, 52),
+            QLine(115, 67, 117, 66)
+        };
+        painter->drawLines(uncompiledLines);
+    }
+
+    painter->setPen(QPen(QColor(40, 40, 40, 255), 2));
+    painter->setBrush(QColor(0, 0, 0, 0));
+    painter->drawRoundedRect(rect, 4, 4, Qt::RelativeSize);
+    painter->drawLine(0, 15, 118, 15);
+
     painter->setPen(Qt::black);
-    painter->drawText(rect, Qt::AlignCenter, m_className);
+    painter->drawText(QRect(0, 0, 120, 15), Qt::AlignCenter, m_className);
 }

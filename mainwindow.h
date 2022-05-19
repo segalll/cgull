@@ -30,6 +30,7 @@ private slots:
     void compile();
     void save();
     void projectCreated();
+    void classStateChanged(QString className, bool errors, bool compiled);
 
 private:
     Ui::MainWindow* m_ui;

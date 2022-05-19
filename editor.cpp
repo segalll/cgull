@@ -242,19 +242,19 @@ void Editor::keyPressEvent(QKeyEvent* ev) {
     } else if (ev->key() == Qt::Key_Enter || ev->key() == Qt::Key_Return) {
         newLine();
         lint();
-        m_currentFileCompiles = false;
+        m_currentFileCompiled = false;
     } else if (ev->key() == Qt::Key_Tab) {
         indent();
         lint();
-        m_currentFileCompiles = false;
+        m_currentFileCompiled = false;
     } else if (ev->key() == Qt::Key_Backtab) {
         unindent();
         lint();
-        m_currentFileCompiles = false;
+        m_currentFileCompiled = false;
     } else if (ev->key() == Qt::Key_Backspace) {
         backspace();
         lint();
-        m_currentFileCompiles = false;
+        m_currentFileCompiled = false;
     } else if (ev->matches(QKeySequence::SelectAll)) {
         selectAll();
     } else if (ev->matches(QKeySequence::Copy)) {
@@ -262,19 +262,19 @@ void Editor::keyPressEvent(QKeyEvent* ev) {
     } else if (ev->matches(QKeySequence::Paste)) {
         paste();
         lint();
-        m_currentFileCompiles = false;
+        m_currentFileCompiled = false;
     } else if (ev->matches(QKeySequence::Undo)) {
         undo();
         lint();
-        m_currentFileCompiles = false;
+        m_currentFileCompiled = false;
     } else if (ev->matches(QKeySequence::Redo)) {
         redo();
         lint();
-        m_currentFileCompiles = false;
+        m_currentFileCompiled = false;
     } else if (ev->text().length() > 0) {
         enterStr(ev->text().toStdString());
         lint();
-        m_currentFileCompiles = false;
+        m_currentFileCompiled = false;
     }
     update(); // schedule redraw hopefully
 }
@@ -374,7 +374,7 @@ void Editor::closeEvent(QCloseEvent* ev) {
         std::nullopt, // selection start
         false // mouse down
     };
-    m_currentFileCompiles = true;
+    m_currentFileCompiled = true;
     m_currentFileName = "untitled";
     m_fileTabBar->addTab("untitled");
     m_textBuffer = {""};
@@ -531,7 +531,7 @@ void Editor::renderLineNumbers() {
     };
     c.vao.bind();
     c.shader.bind();
-    float shade = m_currentFileCompiles ? 0.15f : 0.3f;
+    float shade = m_currentFileCompiled ? 0.15f : 0.3f;
     float backgroundColor[] = { shade, shade, shade, 1.0f };
     c.shader.setUniformValueArray(c.shader.uniformLocation("color"), backgroundColor, 1, 4);
     c.shader.setUniformValueArray(c.shader.uniformLocation("scroll"), scroll, 1, 2);
@@ -840,7 +840,9 @@ void Editor::compilePotentiallyClosed(QString fileName) {
 }
 
 void Editor::compileFinished() {
-    m_currentFileCompiles = m_compileProcess->readAllStandardError().size() == 0;
+    m_currentFileCompiled = m_compileProcess->readAllStandardError().size() == 0;
+
+    emit linted(m_currentFileName.chopped(5), !m_currentFileCompiled, m_currentFileCompiled);
 
     update();
 }
@@ -860,6 +862,7 @@ void Editor::lintFinished() {
     auto l = m_lintProcess->readAllStandardError().split('\n');
     if (l.length() == 0 || (l.length() == 1 && l[0] == "")) {
         m_lints.clear();
+        emit linted(m_currentFileName.chopped(5), false, m_currentFileCompiled);
     } else {
         int count = l[l.count() - 2].split(' ')[0].toInt();
         int gap = 3;
@@ -880,6 +883,7 @@ void Editor::lintFinished() {
                 .pos = { row, col }
             });
         }
+        emit linted(m_currentFileName.chopped(5), true, m_currentFileCompiled);
     }
 
     if (m_wantAnotherLint) {
@@ -935,7 +939,7 @@ void Editor::openClassFromGUI(QString path) {
     m_fileTabBar->setCurrentIndex(m_fileTabBar->count() - 1);
     m_fileTabBar->show();
 
-    m_bufferCache[m_currentFileName] = { m_textBuffer, m_cursorState, m_renderData.scroll, m_currentFileCompiles };
+    m_bufferCache[m_currentFileName] = { m_textBuffer, m_cursorState, m_renderData.scroll, m_currentFileCompiled };
 
     QFileInfo f(m_tempPath + fileName);
     if (f.exists()) {
@@ -1267,13 +1271,13 @@ std::vector<TextVertex> Editor::generateLineNumberVertices() {
 }
 
 void Editor::tabChanged(int tabIndex) {
-    m_bufferCache[m_currentFileName] = { m_textBuffer, m_cursorState, m_renderData.scroll, m_currentFileCompiles };
+    m_bufferCache[m_currentFileName] = { m_textBuffer, m_cursorState, m_renderData.scroll, m_currentFileCompiled };
 
     const auto& e = m_bufferCache[m_fileTabBar->tabText(tabIndex)];
     m_textBuffer = e.textBuffer;
     m_cursorState = e.cursorState;
     m_renderData.scroll = e.scroll;
-    m_currentFileCompiles = e.currentFileCompiles;
+    m_currentFileCompiled = e.currentFileCompiles;
     m_currentFileName = m_fileTabBar->tabText(tabIndex);
     m_lints.clear();
 
@@ -1289,7 +1293,7 @@ void Editor::tabClosed(int tabIndex) {
     m_textBuffer = e.textBuffer;
     m_cursorState = e.cursorState;
     m_renderData.scroll = e.scroll;
-    m_currentFileCompiles = e.currentFileCompiles;
+    m_currentFileCompiled = e.currentFileCompiles;
     m_currentFileName = m_fileTabBar->tabText(m_fileTabBar->currentIndex());
     m_lints.clear();
 

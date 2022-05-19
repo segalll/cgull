@@ -151,6 +151,9 @@ public:
     std::vector<TextVertex> generateBatchedVertices(const std::vector<std::string>& textContent);
     std::vector<TextVertex> generateLineNumberVertices();
 
+signals:
+    void linted(QString className, bool errors, bool compiled);
+
 private slots:
     void tabChanged(int tabIndex);
     void tabClosed(int tabIndex);
@@ -171,7 +174,7 @@ private:
     QString m_currentFileName;
     std::map<QString, EditorState> m_bufferCache;
     bool m_wantAnotherLint = false;
-    bool m_currentFileCompiles = false;
+    bool m_currentFileCompiled = false;
 };
 
 #endif // EDITOR_H

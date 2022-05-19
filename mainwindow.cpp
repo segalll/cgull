@@ -28,6 +28,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), m_ui(new Ui::Main
 
     m_editor = new Editor;
 
+    connect(m_editor, &Editor::linted, this, &MainWindow::classStateChanged);
+
     m_runner = new Runner(m_currentProject.getPath());
 
     loadProject();
@@ -119,4 +121,15 @@ void MainWindow::save() {
 void MainWindow::projectCreated() {
     m_currentProject.create(m_createProjectDialog->getPath());
     m_scene->clear();
+}
+
+void MainWindow::classStateChanged(QString className, bool errors, bool compiled) {
+    for (QGraphicsItem* p : m_scene->items()) {
+        if (p->data(0).toString() == className) {
+            p->setData(1, errors);
+            p->setData(2, compiled);
+            p->update();
+            return;
+        }
+    }
 }
