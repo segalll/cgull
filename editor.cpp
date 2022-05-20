@@ -957,7 +957,7 @@ void Editor::closeClass(const QString& className) {
     }
 }
 
-constexpr float Editor::properCursorPos(unsigned int x, unsigned int y) {
+float Editor::properCursorPos(unsigned int x, unsigned int y) {
     if (x == 0) return m_renderData.xOffset;
 
     const TextRenderData& t = m_renderData.text;
@@ -965,7 +965,7 @@ constexpr float Editor::properCursorPos(unsigned int x, unsigned int y) {
     return t.vertices[t.rowIndices[y] + (x - 1) * 6 + 1].x + g.ax - g.bl;
 }
 
-constexpr float Editor::maxScroll() {
+float Editor::maxScroll() {
     const float visibleLines = (float)m_renderData.height / m_fontData.height;
     if (m_textBuffer.size() < visibleLines) {
         return 0.0f;
@@ -973,7 +973,7 @@ constexpr float Editor::maxScroll() {
     return (int)((float)m_textBuffer.size() - visibleLines) * m_fontData.height + m_renderData.yOffset + 20.0f;
 }
 
-constexpr Coord Editor::mouseToCursorPos(unsigned int x, unsigned int y) {
+Coord Editor::mouseToCursorPos(unsigned int x, unsigned int y) {
     Coord r;
     r.col = 0;
     r.row = ((float)y + m_renderData.scroll - m_renderData.yOffset - (m_fontData.height / 2)) / m_fontData.height;
@@ -990,7 +990,7 @@ constexpr Coord Editor::mouseToCursorPos(unsigned int x, unsigned int y) {
     return r;
 }
 
-constexpr std::tuple<Coord, Coord> Editor::getSelectionEnds() {
+std::tuple<Coord, Coord> Editor::getSelectionEnds() {
     if (m_cursorState.selectionStart == std::nullopt) {
         return { m_cursorState.pos, m_cursorState.pos };
     }
@@ -1003,7 +1003,7 @@ constexpr std::tuple<Coord, Coord> Editor::getSelectionEnds() {
     return { front, back };
 }
 
-constexpr QRect Editor::getLintHoverRegion(int index) {
+QRect Editor::getLintHoverRegion(int index) {
     int startX = properCursorPos(m_lints[index].pos.col, m_lints[index].pos.row);
     int endX = properCursorPos(m_lints[index].pos.col + 1, m_lints[index].pos.row);
     int y = m_fontData.height * m_lints[index].pos.row + m_renderData.yOffset - m_renderData.scroll;

@@ -9,6 +9,7 @@
 #include <QProcess>
 #include <QTabBar>
 
+#include <optional>
 #include <unordered_map>
 
 struct FontGlyph {
@@ -142,11 +143,11 @@ public:
     void openClassFromGUI(const QString& path);
     void closeClass(const QString& className);
 
-    constexpr float properCursorPos(unsigned int x, unsigned int y);
-    constexpr float maxScroll();
-    constexpr Coord mouseToCursorPos(unsigned int x, unsigned int y);
-    constexpr std::tuple<Coord, Coord> getSelectionEnds();
-    constexpr QRect getLintHoverRegion(int index);
+    float properCursorPos(unsigned int x, unsigned int y);
+    float maxScroll();
+    Coord mouseToCursorPos(unsigned int x, unsigned int y);
+    std::tuple<Coord, Coord> getSelectionEnds();
+    QRect getLintHoverRegion(int index);
 
     bool fileIsSameAsTemp(const QString& projectPath, const QString& fileName) const;
 
