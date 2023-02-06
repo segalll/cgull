@@ -37,6 +37,12 @@ constexpr char correspondingContainer(char character) {
 } // namespace
 
 Editor::Editor() {
+    // necessary for keyboard focus
+    setFocusPolicy(Qt::StrongFocus);
+
+    // enables compressed keyboard input
+    setAttribute(Qt::WA_KeyCompression, true);
+
     QRect r(0, 0, 800, 600);
     r.moveCenter(screen()->geometry().center());
     setGeometry(r);
@@ -59,7 +65,7 @@ Editor::Editor() {
     });
 
     m_fileTabBar = new QTabBar(this);
-    m_fileTabBar->setGeometry(5, 5, 790, 20);
+    m_fileTabBar->setGeometry(5, 5, 790, 10);
     m_fileTabBar->setCursor(Qt::ArrowCursor);
     m_fileTabBar->setExpanding(true);
     m_fileTabBar->setTabsClosable(true);
@@ -182,6 +188,7 @@ void Editor::initializeGL() {
 }
 
 void Editor::resizeGL(int w, int h) {
+    qDebug() << w << " " << h;
     glViewport(0, 0, w, h);
     glScissor(0, 0, w, h - (int)m_renderData.yOffset + 2);
     glDisable(GL_SCISSOR_TEST); // must be able to clear new area
@@ -215,7 +222,7 @@ bool Editor::event(QEvent* ev) {
     if (ev->type() == QEvent::ToolTip && m_lints.size() > 0) {
         QHelpEvent* helpEvent = static_cast<QHelpEvent*>(ev);
 
-        for (int i = 0; i < m_lints.size(); i++) {
+        for (std::size_t i = 0; i < m_lints.size(); i++) {
             QRect lintHoverRegion = getLintHoverRegion(i);
             if (lintHoverRegion.contains(helpEvent->pos())) {
                 QToolTip::showText(pos() + lintHoverRegion.bottomRight() - QPoint(10, 10), m_lints[i].error);
@@ -311,7 +318,7 @@ void Editor::mouseDoubleClickEvent(QMouseEvent* ev) {
             }
         }
         m_cursorState.pos = Coord { c.row, static_cast<unsigned int>(m_textBuffer[c.row].length()) };
-        for (int i = c.col + 1; i < m_textBuffer[c.row].length(); i++) {
+        for (std::size_t i = c.col + 1; i < m_textBuffer[c.row].length(); i++) {
             if (!std::isalnum(m_textBuffer[c.row][i]) && m_textBuffer[c.row][i] != '_') {
                 m_cursorState.pos = Coord { c.row, static_cast<unsigned int>(i) };
                 break;
@@ -326,7 +333,7 @@ void Editor::mouseDoubleClickEvent(QMouseEvent* ev) {
             }
         }
         m_cursorState.pos = Coord { c.row, static_cast<unsigned int>(m_textBuffer[c.row].length()) };
-        for (int i = c.col + 1; i < m_textBuffer[c.row].length(); i++) {
+        for (std::size_t i = c.col + 1; i < m_textBuffer[c.row].length(); i++) {
             if (m_textBuffer[c.row][i] != ' ') {
                 m_cursorState.pos = Coord { c.row, static_cast<unsigned int>(i) };
                 break;
@@ -449,7 +456,7 @@ void Editor::renderSelection() {
     std::vector<float> selectionVertices;
 
     auto [front, back] = getSelectionEnds();
-    for (int r = front.row; r <= back.row; r++) {
+    for (std::size_t r = front.row; r <= back.row; r++) {
         float startX, endX;
         if (r == front.row) {
             startX = properCursorPos(front.col, front.row);
@@ -607,7 +614,7 @@ void Editor::newLine() {
 
 void Editor::indent() {
     auto [front, back] = getSelectionEnds(); // returns both cursor if no selection
-    for (int r = front.row; r <= back.row; r++) {
+    for (std::size_t r = front.row; r <= back.row; r++) {
         int indentPos = m_textBuffer[r].find_first_not_of(' ');
         indentPos = indentPos == -1 ? m_textBuffer[r].length() : indentPos;
 
@@ -627,7 +634,7 @@ void Editor::indent() {
 
 bool Editor::unindent() {
     auto [front, back] = getSelectionEnds();
-    for (int r = front.row; r <= back.row; r++) {
+    for (std::size_t r = front.row; r <= back.row; r++) {
         int indentPos = m_textBuffer[r].find_first_not_of(' ', m_cursorState.pos.col);
         indentPos = indentPos == -1 ? m_textBuffer[r].length() : indentPos;
         if (indentPos > 0 && indentPos % 4 == 0 && m_textBuffer[m_cursorState.pos.row].substr(indentPos - 4, 4) == "    ") {
@@ -750,7 +757,7 @@ void Editor::copy() {
 
     QString content;
     auto [front, back] = getSelectionEnds();
-    for (int r = front.row; r <= back.row; r++) {
+    for (std::size_t r = front.row; r <= back.row; r++) {
         if (r == front.row) {
             content += QString::fromStdString((m_textBuffer[r].substr(front.col)));
             if (front.row != back.row) {
@@ -966,11 +973,11 @@ float Editor::properCursorPos(unsigned int x, unsigned int y) {
 }
 
 float Editor::maxScroll() {
-    const float visibleLines = (float)m_renderData.height / m_fontData.height;
+    const float visibleLines = ((float)m_renderData.height - m_renderData.yOffset) / m_fontData.height;
     if (m_textBuffer.size() < visibleLines) {
         return 0.0f;
     }
-    return (int)((float)m_textBuffer.size() - visibleLines) * m_fontData.height + m_renderData.yOffset + 20.0f;
+    return (int)((float)m_textBuffer.size() - visibleLines) * m_fontData.height + 20.0f;
 }
 
 Coord Editor::mouseToCursorPos(unsigned int x, unsigned int y) {
@@ -979,7 +986,7 @@ Coord Editor::mouseToCursorPos(unsigned int x, unsigned int y) {
     r.row = ((float)y + m_renderData.scroll - m_renderData.yOffset - (m_fontData.height / 2)) / m_fontData.height;
     r.row = qMin(m_textBuffer.size() - 1, r.row);
 
-    for (int i = 0; i < m_textBuffer[r.row].length(); i++) {
+    for (std::size_t i = 0; i < m_textBuffer[r.row].length(); i++) {
         if (x >= m_renderData.text.vertices[m_renderData.text.rowIndices[r.row] + (i * 6) + 1].x + (m_fontData.fontGlyphs[m_textBuffer[r.row][i]].ax / 2.0f)) {
             r.col++;
         } else {
@@ -1213,7 +1220,7 @@ std::vector<TextVertex> Editor::generateBatchedVertices(const std::vector<std::s
                 blue = 0.812f;
             }
             if (currentWord.length() > 0 && cwPos != -1) {
-                for (int i = 0; i < currentWord.length() - 1; i++) {
+                for (std::size_t i = 0; i < currentWord.length() - 1; i++) {
                     for (int j = 0; j < 6; j++) {
                         const int idx = m_renderData.text.rowIndices[r] + (cwPos + i) * 6 + j;
                         v[idx].r = red;
@@ -1246,7 +1253,7 @@ std::vector<TextVertex> Editor::generateLineNumberVertices() {
 
     float y = m_fontData.height + m_renderData.yOffset;
 
-    for (int i = 1; i <= m_textBuffer.size(); i++) {
+    for (std::size_t i = 1; i <= m_textBuffer.size(); i++) {
         const std::string s = std::to_string(i);
 
         float x = 30.0f;

@@ -10,23 +10,23 @@ CONFIG += sdk_no_version_check
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    classdiagram.cpp \
-    createclassdialog.cpp \
-    createprojectdialog.cpp \
-    editor.cpp \
-    main.cpp \
-    mainwindow.cpp \
-    project.cpp \
-    runner.cpp
+    src/classdiagram.cpp \
+    src/createclassdialog.cpp \
+    src/createprojectdialog.cpp \
+    src/editor.cpp \
+    src/main.cpp \
+    src/mainwindow.cpp \
+    src/project.cpp \
+    src/runner.cpp
 
 HEADERS += \
-    classdiagram.h \
-    createclassdialog.h \
-    createprojectdialog.h \
-    editor.h \
-    mainwindow.h \
-    project.h \
-    runner.h
+    src/classdiagram.h \
+    src/createclassdialog.h \
+    src/createprojectdialog.h \
+    src/editor.h \
+    src/mainwindow.h \
+    src/project.h \
+    src/runner.h
 
 FORMS += \
     mainwindow.ui
